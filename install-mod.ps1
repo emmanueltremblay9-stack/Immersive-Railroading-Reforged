@@ -1,6 +1,5 @@
 param(
     [string]$ModsDir = $env:CODEX_MINECRAFT_MODS_DIR,
-    [string]$ProjectLibDir,
     [switch]$SkipBuild
 )
 
@@ -11,17 +10,16 @@ if (-not $ModsDir) {
     $ModsDir = "C:\Users\Emmanuel Tremblay\AppData\Roaming\PrismLauncher\instances\1.21.1 TesT LaB\minecraft\mods"
 }
 
-if (-not $ProjectLibDir) {
-    $ProjectLibDir = Join-Path $projectRoot "lib"
-}
-
 if (-not (Test-Path -LiteralPath $ModsDir -PathType Container)) {
     throw "Mods directory does not exist: $ModsDir"
 }
 
 $modsDirPath = (Resolve-Path -LiteralPath $ModsDir).Path
-New-Item -ItemType Directory -Force -Path $ProjectLibDir | Out-Null
-$projectLibPath = (Resolve-Path -LiteralPath $ProjectLibDir).Path
+$projectLibsPathRaw = Join-Path $projectRoot "libs"
+if (-not (Test-Path -LiteralPath $projectLibsPathRaw -PathType Container)) {
+    throw "Project libs directory does not exist: $projectLibsPathRaw"
+}
+$projectLibsPath = (Resolve-Path -LiteralPath $projectLibsPathRaw).Path
 $buildGradle = Join-Path $projectRoot "build.gradle"
 $buildText = Get-Content -Raw -LiteralPath $buildGradle
 if ($buildText -notmatch "version\s*=\s*'([^']+)'") {
@@ -130,7 +128,10 @@ function Copy-VerifiedJar {
         [Parameter(Mandatory = $true)][string]$DestinationDir
     )
 
-    New-Item -ItemType Directory -Force -Path $DestinationDir | Out-Null
+    if (-not (Test-Path -LiteralPath $DestinationDir -PathType Container)) {
+        throw "Destination directory does not exist: $DestinationDir"
+    }
+
     $destination = Join-Path $DestinationDir (Split-Path -Leaf $SourceJar)
     Copy-Item -LiteralPath $SourceJar -Destination $destination -Force
 
@@ -202,7 +203,7 @@ if ($sourceJar.BaseName -match "^ImmersiveRailroading-(.+)$") {
 }
 $installedName = $sourceJar.Name
 $targetJar = Join-Path $modsDirPath $installedName
-$projectLibJar = Join-Path $projectLibPath $installedName
+$projectLibsJar = Join-Path $projectLibsPath $installedName
 
 $runtimeDependencySpecs = @(
     [ordered]@{
@@ -230,26 +231,26 @@ $runtimeDependencyJars = @(
 $oldJars = @(
     Find-JarsByModId -Directory $modsDirPath -ModId $modId
 )
-$oldProjectLibJars = @(
-    Find-JarsByModId -Directory $projectLibPath -ModId $modId
+$oldProjectLibsJars = @(
+    Find-JarsByModId -Directory $projectLibsPath -ModId $modId
 )
 
 foreach ($oldJar in $oldJars) {
     Remove-Item -LiteralPath $oldJar.FullName -Force
 }
 
-foreach ($oldJar in $oldProjectLibJars) {
+foreach ($oldJar in $oldProjectLibsJars) {
     Remove-Item -LiteralPath $oldJar.FullName -Force
 }
 
 $installedCopy = Copy-VerifiedJar -SourceJar $sourceJar.FullName -DestinationDir $modsDirPath
-$projectLibCopy = Copy-VerifiedJar -SourceJar $sourceJar.FullName -DestinationDir $projectLibPath
+$projectLibsCopy = Copy-VerifiedJar -SourceJar $sourceJar.FullName -DestinationDir $projectLibsPath
 
 $remaining = @(
     Find-JarsByModId -Directory $modsDirPath -ModId $modId
 )
-$projectLibRemaining = @(
-    Find-JarsByModId -Directory $projectLibPath -ModId $modId
+$projectLibsRemaining = @(
+    Find-JarsByModId -Directory $projectLibsPath -ModId $modId
 )
 
 $metadata = Get-JarTextEntry -JarPath $targetJar -EntryNames @("META-INF/neoforge.mods.toml", "META-INF/mods.toml")
@@ -258,7 +259,7 @@ $dependencyReports = @()
 foreach ($dependency in $runtimeDependencyJars) {
     $depModId = $dependency.ModId
     $oldDependencyMods = @(Find-JarsByModId -Directory $modsDirPath -ModId $depModId)
-    $oldDependencyLibs = @(Find-JarsByModId -Directory $projectLibPath -ModId $depModId)
+    $oldDependencyLibs = @(Find-JarsByModId -Directory $projectLibsPath -ModId $depModId)
 
     foreach ($oldJar in $oldDependencyMods) {
         Remove-Item -LiteralPath $oldJar.FullName -Force
@@ -268,23 +269,23 @@ foreach ($dependency in $runtimeDependencyJars) {
     }
 
     $depInstalledCopy = Copy-VerifiedJar -SourceJar $dependency.SourceJar -DestinationDir $modsDirPath
-    $depProjectLibCopy = Copy-VerifiedJar -SourceJar $dependency.SourceJar -DestinationDir $projectLibPath
+    $depProjectLibCopy = Copy-VerifiedJar -SourceJar $dependency.SourceJar -DestinationDir $projectLibsPath
     $depModsRemaining = @(Find-JarsByModId -Directory $modsDirPath -ModId $depModId)
-    $depLibRemaining = @(Find-JarsByModId -Directory $projectLibPath -ModId $depModId)
+    $depLibRemaining = @(Find-JarsByModId -Directory $projectLibsPath -ModId $depModId)
 
     $dependencyReports += [ordered]@{
         ModId = $depModId
         SourceJar = $dependency.SourceJar
         InstalledJar = $depInstalledCopy.TargetJar
-        ProjectLibJar = $depProjectLibCopy.TargetJar
+        ProjectLibsJar = $depProjectLibCopy.TargetJar
         InstalledSha256 = $depInstalledCopy.TargetSha256
-        ProjectLibSha256 = $depProjectLibCopy.TargetSha256
+        ProjectLibsSha256 = $depProjectLibCopy.TargetSha256
         InstalledHashMatch = $depInstalledCopy.HashesMatch
-        ProjectLibHashMatch = $depProjectLibCopy.HashesMatch
+        ProjectLibsHashMatch = $depProjectLibCopy.HashesMatch
         DeletedOldInstalledJars = @($oldDependencyMods | ForEach-Object { $_.FullName })
-        DeletedOldProjectLibJars = @($oldDependencyLibs | ForEach-Object { $_.FullName })
+        DeletedOldProjectLibsJars = @($oldDependencyLibs | ForEach-Object { $_.FullName })
         RemainingInstalledJarCount = $depModsRemaining.Count
-        RemainingProjectLibJarCount = $depLibRemaining.Count
+        RemainingProjectLibsJarCount = $depLibRemaining.Count
     }
 }
 
@@ -296,27 +297,27 @@ $report = [ordered]@{
     InstalledVersion = $actualInstalledVersion
     SourceJar = $installedCopy.SourceJar
     InstalledJar = $installedCopy.TargetJar
-    ProjectLibJar = $projectLibCopy.TargetJar
+    ProjectLibsJar = $projectLibsCopy.TargetJar
     SourceSize = $installedCopy.SourceSize
     InstalledSize = $installedCopy.TargetSize
-    ProjectLibSize = $projectLibCopy.TargetSize
+    ProjectLibsSize = $projectLibsCopy.TargetSize
     SourceSha256 = $installedCopy.SourceSha256
     InstalledSha256 = $installedCopy.TargetSha256
-    ProjectLibSha256 = $projectLibCopy.TargetSha256
+    ProjectLibsSha256 = $projectLibsCopy.TargetSha256
     HashesMatch = $installedCopy.HashesMatch
-    ProjectLibHashesMatch = $projectLibCopy.HashesMatch
+    ProjectLibsHashesMatch = $projectLibsCopy.HashesMatch
     DeletedOldJars = @($oldJars | ForEach-Object { $_.FullName })
-    DeletedOldProjectLibJars = @($oldProjectLibJars | ForEach-Object { $_.FullName })
+    DeletedOldProjectLibsJars = @($oldProjectLibsJars | ForEach-Object { $_.FullName })
     RemainingJarsForMod = @($remaining | ForEach-Object { $_.FullName })
-    RemainingProjectLibJarsForMod = @($projectLibRemaining | ForEach-Object { $_.FullName })
+    RemainingProjectLibsJarsForMod = @($projectLibsRemaining | ForEach-Object { $_.FullName })
     RemainingJarCountForMod = $remaining.Count
-    RemainingProjectLibJarCountForMod = $projectLibRemaining.Count
+    RemainingProjectLibsJarCountForMod = $projectLibsRemaining.Count
     OnlyInstalledJarRemains = ($remaining.Count -eq 1 -and $remaining[0].FullName -eq $targetJar)
-    OnlyProjectLibJarRemains = ($projectLibRemaining.Count -eq 1 -and $projectLibRemaining[0].FullName -eq $projectLibJar)
+    OnlyProjectLibsJarRemains = ($projectLibsRemaining.Count -eq 1 -and $projectLibsRemaining[0].FullName -eq $projectLibsJar)
     ContainsNeoForgeMetadata = ($null -ne $metadata)
     ContainsLogo = (Test-JarContainsEntry -JarPath $targetJar -EntryName "immersive_railroading_neoforge_icon.png")
     ContainsModEntrypoint = (Test-JarContainsEntry -JarPath $targetJar -EntryName "cam72cam/immersiverailroading/Mod.class")
-    ProjectLibDir = $projectLibPath
+    ProjectLibsDir = $projectLibsPath
     RuntimeDependencies = $dependencyReports
 }
 
@@ -327,30 +328,30 @@ if (-not $report.HashesMatch) {
     throw "Installed JAR hash does not match source JAR"
 }
 
-if (-not $report.ProjectLibHashesMatch) {
-    throw "Project lib JAR hash does not match source JAR"
+if (-not $report.ProjectLibsHashesMatch) {
+    throw "Project libs JAR hash does not match source JAR"
 }
 
 if (-not $report.OnlyInstalledJarRemains) {
     throw "Expected exactly one installed JAR for $modId"
 }
 
-if (-not $report.OnlyProjectLibJarRemains) {
-    throw "Expected exactly one project lib JAR for $modId"
+if (-not $report.OnlyProjectLibsJarRemains) {
+    throw "Expected exactly one project libs JAR for $modId"
 }
 
 foreach ($dependencyReport in $dependencyReports) {
     if (-not $dependencyReport.InstalledHashMatch) {
         throw "Installed dependency hash does not match for $($dependencyReport.ModId)"
     }
-    if (-not $dependencyReport.ProjectLibHashMatch) {
-        throw "Project lib dependency hash does not match for $($dependencyReport.ModId)"
+    if (-not $dependencyReport.ProjectLibsHashMatch) {
+        throw "Project libs dependency hash does not match for $($dependencyReport.ModId)"
     }
     if ($dependencyReport.RemainingInstalledJarCount -ne 1) {
         throw "Expected exactly one installed dependency JAR for $($dependencyReport.ModId)"
     }
-    if ($dependencyReport.RemainingProjectLibJarCount -ne 1) {
-        throw "Expected exactly one project lib dependency JAR for $($dependencyReport.ModId)"
+    if ($dependencyReport.RemainingProjectLibsJarCount -ne 1) {
+        throw "Expected exactly one project libs dependency JAR for $($dependencyReport.ModId)"
     }
 }
 

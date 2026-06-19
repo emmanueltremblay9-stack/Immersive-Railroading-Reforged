@@ -40,7 +40,7 @@ Last updated: 2026-06-19
 - Added `install-mod.ps1` for repeatable Prism LAB installation.
 - Built the IR production JAR and installed it into the Prism LAB `minecraft\mods` folder.
 - Copied the required UMC and TrackAPI runtime dependency jars into the same LAB mods folder after metadata inspection showed they were missing.
-- Updated `install-mod.ps1` so each install also mirrors the built IR runtime JAR and required runtime dependency JARs into the project `lib` directory.
+- Updated `install-mod.ps1` so each install also mirrors the built IR runtime JAR and required runtime dependency JARs into the fixed project `libs` directory. The installer no longer creates a mirror directory; `libs` is tracked with a README and must exist.
 
 ## Command Evidence
 
@@ -60,16 +60,16 @@ Full logs are under `build/reports/port/` in the local workspace. The `build/` d
 | `.\gradlew.bat clean build --stacktrace --warning-mode all` in IR | Exit 0. `compileJava`, `processResources`, `remapJar`, `sourcesJar`, and `build` completed. |
 | `.\install-mod.ps1` first pass | Exit 1 after successful build. Installer rejected ambiguous runtime selection because downgraded/shadow intermediate jars also contained metadata. |
 | `.\install-mod.ps1 -SkipBuild` after selector fix | Exit 0. Installed and hash-verified the unclassified production JAR. |
-| `.\install-mod.ps1 -SkipBuild` after project-lib mirror update | Exit 0. Reinstalled Prism LAB jars and mirrored IR, UMC, and TrackAPI into project `lib` with matching SHA-256 hashes. |
+| `.\install-mod.ps1 -SkipBuild` after project `libs` mirror update | Exit 0. Reinstalled Prism LAB jars and mirrored IR, UMC, and TrackAPI into project `libs` with matching SHA-256 hashes. |
 
 ## Build Artifacts
 
 | Artifact | Path |
 | --- | --- |
-| Production JAR | `build/libs/ImmersiveRailroading-1.21.1-neoforge-1.10.1-3635792.jar` |
-| Sources JAR | `build/libs/ImmersiveRailroading-1.21.1-neoforge-1.10.1-3635792-sources.jar` |
+| Production JAR | `build/libs/ImmersiveRailroading-1.21.1-neoforge-1.10.1-8803e12.jar` |
+| Sources JAR | `build/libs/ImmersiveRailroading-1.21.1-neoforge-1.10.1-8803e12-sources.jar` |
 | Install report | `build/install-report.json` |
-| Project lib mirror | `lib\ImmersiveRailroading-1.21.1-neoforge-1.10.1-3635792.jar`, `lib\TrackAPI-1.21.1-neoforge-1.2-a965c1.jar`, `lib\UniversalModCore-1.21.1-neoforge-1.3.0-73ac499.jar` |
+| Project libs mirror | `libs\ImmersiveRailroading-1.21.1-neoforge-1.10.1-8803e12.jar`, `libs\TrackAPI-1.21.1-neoforge-1.2-a965c1.jar`, `libs\UniversalModCore-1.21.1-neoforge-1.3.0-73ac499.jar` |
 
 ## Prism LAB Install Evidence
 
