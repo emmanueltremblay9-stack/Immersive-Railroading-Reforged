@@ -1,0 +1,1 @@
+You don't need to run anything manually, NeoGradle has done them for you

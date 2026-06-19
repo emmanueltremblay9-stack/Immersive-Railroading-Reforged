@@ -1,0 +1,162 @@
+plugins {
+    id 'java'
+    id 'eclipse'
+    //A customized fork for better support on Cleanroom
+    id 'xyz.wagyourtail.unimined' version "1.4.18-kappa"
+    id 'com.gradleup.shadow' version "9.4.1"
+    id "maven-publish"
+    id 'xyz.wagyourtail.jvmdowngrader' version '1.3.6'
+}
+configurations {
+    umcShade
+    modImplementation.extendsFrom umcShade
+}
+
+
+
+apply plugin: 'maven-publish'
+
+
+version = '1.21.1-neoforge-1.10.1'
+if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
+    try {
+        version += "-" + 'git rev-parse --verify --short=7 HEAD'.execute().text.trim()
+    } catch (Exception ex) {
+        version += "-unknown"
+    }
+}
+group = "cam72cam.immersiverailroading"
+String archive_base_name = "ImmersiveRailroading"
+base.archivesName = archive_base_name
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}
+
+jvmdg {
+    quiet = false
+    downgradeTo = JavaVersion.VERSION_1_8
+    multiReleaseOriginal = true
+    shadeInlining = false
+    dg(configurations.umcShade, false)
+    //MR-JAR uses a Incremental Update-like strategy, so add versions here won't cause too much waste
+    multiReleaseVersions = [
+            JavaVersion.VERSION_1_8,  // 1.16 and below
+            JavaVersion.VERSION_16,   // 1.17
+            JavaVersion.VERSION_17,   // 1.18 - 1.20
+            JavaVersion.VERSION_21,   // 1.21
+            JavaVersion.VERSION_21
+    ].toSet()
+}
+
+unimined.minecraft {
+    version "1.21.1"
+
+    mappings {
+        intermediary()
+        mojmap()
+        parchment("1.21.1", "2024.11.17")
+    }
+
+    neoForge {
+        loader("216")
+    }
+
+    mods {
+        modImplementation {
+            //In case something uses named mapping in AW
+            catchAWNamespaceAssertion()
+        }
+    }
+
+    minecraftRemapper.config {
+        ignoreConflicts(true)
+    }
+
+    defaultRemapJar = true
+}
+
+
+repositories { maven { url = "https://teamopenindustry.cc/maven" }}
+
+dependencies {
+    implementation group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+    modImplementation 'cam72cam.universalmodcore:UniversalModCore:1.21.1-neoforge-1.3.0-73ac499'
+}
+
+
+apply from: 'ImmersiveRailroadingIntegration/dependencies.gradle'
+
+jar {
+    enabled = false
+}
+
+shadowJar {
+    configurations = [project.configurations.umcShade]
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    mergeServiceFiles()
+    archiveClassifier = 'shadow'
+}
+
+remapJar {
+    inputFile = tasks.shadeDowngradedApi.archiveFile
+    dependsOn(tasks.named("shadowJar"))
+    archiveClassifier = ''
+}
+
+tasks.named("assemble") {
+    dependsOn(tasks.named("remapJar"))
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property "version", project.version
+    inputs.property "mcversion", "1.21.1"
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version':project.version, 'mcversion':"1.21.1"
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact remapJar
+            artifactId archive_base_name
+        }
+    }
+    repositories {
+        maven {
+            url "sftp://teamopenindustry.cc:22/var/www/html/maven/"
+            credentials {
+                username = "mavenci"
+                password = System.getenv("MAVENCI_PASS")
+            }
+        }
+    }
+}
+
+tasks.register('showBuildInfo') {
+    doLast {
+        String minecraftString = "1.21.1"
+        String minecraftLoader = "neoforge"
+        String umcVersionString = "1.21.1-neoforge-1.3.0-73ac499"
+        System.out.println("Build for MC 1.21.1 (neoforge)")
+        System.out.println("https://teamopenindustry.cc/maven/cam72cam/immersiverailroading/ImmersiveRailroading/${version}/ImmersiveRailroading-${version}.jar")
+        System.out.println("https://teamopenindustry.cc/maven/cam72cam/universalmodcore/UniversalModCore/${umcVersionString}/UniversalModCore-${umcVersionString}.jar")
+    }
+}
+
+publish.finalizedBy showBuildInfo

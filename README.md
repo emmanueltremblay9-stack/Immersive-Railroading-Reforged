@@ -9,6 +9,27 @@
     Immersive Railroading is a Minecraft mod for 1.16, 1.15, 1.14, 1.12, 1.11, 1.10, and 1.7.  It adds a new transport system (item and players) to the game.  It is based in real world physics (where possible) and uses life size models to convey the true scale and grandeur of Railroading.
 </h4>
 
+## Immersive Railroading Reforged
+
+This branch is an unofficial Minecraft 1.21.1 NeoForge port scaffold. It is not an official TeamOpenIndustry release and is not currently a playable release candidate.
+
+Current target:
+
+- Minecraft 1.21.1
+- NeoForge baseline 21.1.216
+- Java 21
+- Mod id `immersiverailroading`
+- Package root `cam72cam.immersiverailroading`
+- Port branch `port/1.21.1-neoforge`
+
+Clone with submodules:
+
+```powershell
+git clone --recurse-submodules https://github.com/emmanueltremblay9-stack/Immersive-Railroading-Reforged.git
+```
+
+Current evidence and blockers are tracked in [PORTING_STATUS.md](PORTING_STATUS.md). Compatibility and release validation are tracked in [COMPATIBILITY_MATRIX.md](COMPATIBILITY_MATRIX.md), [MIGRATION_NOTES.md](MIGRATION_NOTES.md), and [TEST_PLAN.md](TEST_PLAN.md).
+
 <p align="center">
   <a href="https://minecraft.curseforge.com/projects/immersive-railroading">
     <img src="http://cf.way2muchnoise.eu/full_277736_downloads.svg">

@@ -1,0 +1,4 @@
+[submodule "ImmersiveRailroadingIntegration"]
+	path = ImmersiveRailroadingIntegration
+	url = https://github.com/TeamOpenIndustry/ImmersiveRailroadingIntegration.git
+	branch = 1.21.1-neoforge
