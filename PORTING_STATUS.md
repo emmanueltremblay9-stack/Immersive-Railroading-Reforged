@@ -14,7 +14,7 @@ Last updated: 2026-06-19
 - Package root: `cam72cam.immersiverailroading`
 - Port branch: `port/1.21.1-neoforge`
 - Previous upstream version: `1.10.0`
-- Current port test version: `1.10.1`
+- Current port test version: `1.10.2`
 
 ## Source Commits
 
@@ -34,13 +34,13 @@ Last updated: 2026-06-19
 - Ran the UMC generator. The first pass failed on the integration SSH URL; the second pass succeeded after switching `umc.json` to HTTPS.
 - Preserved the generated NeoForge scaffold files in source control.
 - Added integration as a Git submodule.
-- Updated generated scaffold to target Java 21 and bumped the test version to `1.10.1`.
+- Updated generated scaffold to target Java 21 and bumped the current test version to `1.10.2`.
 - Added the supplied port logo to resources and NeoForge metadata.
 - Added initial license, notice, migration, compatibility, test, and modification documents.
 - Added `install-mod.ps1` for repeatable Prism LAB installation.
 - Built the IR production JAR and installed it into the Prism LAB `minecraft\mods` folder.
 - Copied the required UMC and TrackAPI runtime dependency jars into the same LAB mods folder after metadata inspection showed they were missing.
-- Updated `install-mod.ps1` so each install also mirrors the built IR runtime JAR and required runtime dependency JARs into the fixed project `libs` directory. The installer no longer creates a mirror directory; `libs` is tracked with a README and must exist.
+- Updated `install-mod.ps1` so each install keeps all project-local runtime jars in the Gradle output directory `build/libs`. The installer does not create a separate project mirror directory.
 
 ## Command Evidence
 
@@ -60,22 +60,22 @@ Full logs are under `build/reports/port/` in the local workspace. The `build/` d
 | `.\gradlew.bat clean build --stacktrace --warning-mode all` in IR | Exit 0. `compileJava`, `processResources`, `remapJar`, `sourcesJar`, and `build` completed. |
 | `.\install-mod.ps1` first pass | Exit 1 after successful build. Installer rejected ambiguous runtime selection because downgraded/shadow intermediate jars also contained metadata. |
 | `.\install-mod.ps1 -SkipBuild` after selector fix | Exit 0. Installed and hash-verified the unclassified production JAR. |
-| `.\install-mod.ps1 -SkipBuild` after project `libs` mirror update | Exit 0. Reinstalled Prism LAB jars and mirrored IR, UMC, and TrackAPI into project `libs` with matching SHA-256 hashes. |
+| `.\install-mod.ps1` after `build/libs` dependency-copy update | Exit 0. Rebuilt, reinstalled Prism LAB jars, and copied UMC plus TrackAPI into `build/libs` with matching SHA-256 hashes. |
 
 ## Build Artifacts
 
 | Artifact | Path |
 | --- | --- |
-| Production JAR | `build/libs/ImmersiveRailroading-1.21.1-neoforge-1.10.1-8803e12.jar` |
-| Sources JAR | `build/libs/ImmersiveRailroading-1.21.1-neoforge-1.10.1-8803e12-sources.jar` |
+| Production JAR | `build/libs/ImmersiveRailroading-1.21.1-neoforge-1.10.2-<git>.jar` |
+| Sources JAR | `build/libs/ImmersiveRailroading-1.21.1-neoforge-1.10.2-<git>-sources.jar` |
 | Install report | `build/install-report.json` |
-| Project libs mirror | `libs\ImmersiveRailroading-1.21.1-neoforge-1.10.1-8803e12.jar`, `libs\TrackAPI-1.21.1-neoforge-1.2-a965c1.jar`, `libs\UniversalModCore-1.21.1-neoforge-1.3.0-73ac499.jar` |
+| Project libs directory | `build\libs\ImmersiveRailroading-1.21.1-neoforge-1.10.2-<git>.jar`, `build\libs\TrackAPI-1.21.1-neoforge-1.2-a965c1.jar`, `build\libs\UniversalModCore-1.21.1-neoforge-1.3.0-73ac499.jar` |
 
 ## Prism LAB Install Evidence
 
 | Field | Value |
 | --- | --- |
-| Installed JAR | `C:\Users\Emmanuel Tremblay\AppData\Roaming\PrismLauncher\instances\1.21.1 TesT LaB\minecraft\mods\ImmersiveRailroading-1.21.1-neoforge-1.10.1-3635792.jar` |
+| Installed JAR | `C:\Users\Emmanuel Tremblay\AppData\Roaming\PrismLauncher\instances\1.21.1 TesT LaB\minecraft\mods\ImmersiveRailroading-1.21.1-neoforge-1.10.2-<git>.jar` |
 | Source SHA-256 | `B8BBAF958CF599ADEA2F6805C9739640209662AEF748D631AA484673179B07A9` |
 | Installed SHA-256 | `B8BBAF958CF599ADEA2F6805C9739640209662AEF748D631AA484673179B07A9` |
 | Hash match | yes |

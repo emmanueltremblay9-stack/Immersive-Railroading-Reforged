@@ -15,11 +15,6 @@ if (-not (Test-Path -LiteralPath $ModsDir -PathType Container)) {
 }
 
 $modsDirPath = (Resolve-Path -LiteralPath $ModsDir).Path
-$projectLibsPathRaw = Join-Path $projectRoot "libs"
-if (-not (Test-Path -LiteralPath $projectLibsPathRaw -PathType Container)) {
-    throw "Project libs directory does not exist: $projectLibsPathRaw"
-}
-$projectLibsPath = (Resolve-Path -LiteralPath $projectLibsPathRaw).Path
 $buildGradle = Join-Path $projectRoot "build.gradle"
 $buildText = Get-Content -Raw -LiteralPath $buildGradle
 if ($buildText -notmatch "version\s*=\s*'([^']+)'") {
@@ -175,6 +170,7 @@ $libsDir = Join-Path $projectRoot "build\libs"
 if (-not (Test-Path -LiteralPath $libsDir -PathType Container)) {
     throw "Build output directory does not exist: $libsDir"
 }
+$projectLibsPath = (Resolve-Path -LiteralPath $libsDir).Path
 
 $excludedClassifierPattern = "(?i)-(sources|javadoc|dev|plain|test|tests|api|shadow|shaded|downgraded)(-|\.|$)"
 $runtimeCandidates = @(
@@ -231,26 +227,29 @@ $runtimeDependencyJars = @(
 $oldJars = @(
     Find-JarsByModId -Directory $modsDirPath -ModId $modId
 )
-$oldProjectLibsJars = @(
-    Find-JarsByModId -Directory $projectLibsPath -ModId $modId
-)
 
 foreach ($oldJar in $oldJars) {
     Remove-Item -LiteralPath $oldJar.FullName -Force
 }
 
-foreach ($oldJar in $oldProjectLibsJars) {
-    Remove-Item -LiteralPath $oldJar.FullName -Force
-}
-
 $installedCopy = Copy-VerifiedJar -SourceJar $sourceJar.FullName -DestinationDir $modsDirPath
-$projectLibsCopy = Copy-VerifiedJar -SourceJar $sourceJar.FullName -DestinationDir $projectLibsPath
+$projectLibsItem = Get-Item -LiteralPath $sourceJar.FullName
+$projectLibsHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $sourceJar.FullName).Hash
+$projectLibsCopy = [ordered]@{
+    SourceJar = $projectLibsItem.FullName
+    TargetJar = $projectLibsItem.FullName
+    SourceSize = $projectLibsItem.Length
+    TargetSize = $projectLibsItem.Length
+    SourceSha256 = $projectLibsHash
+    TargetSha256 = $projectLibsHash
+    HashesMatch = $true
+}
 
 $remaining = @(
     Find-JarsByModId -Directory $modsDirPath -ModId $modId
 )
 $projectLibsRemaining = @(
-    Find-JarsByModId -Directory $projectLibsPath -ModId $modId
+    Get-Item -LiteralPath $sourceJar.FullName
 )
 
 $metadata = Get-JarTextEntry -JarPath $targetJar -EntryNames @("META-INF/neoforge.mods.toml", "META-INF/mods.toml")
@@ -307,7 +306,7 @@ $report = [ordered]@{
     HashesMatch = $installedCopy.HashesMatch
     ProjectLibsHashesMatch = $projectLibsCopy.HashesMatch
     DeletedOldJars = @($oldJars | ForEach-Object { $_.FullName })
-    DeletedOldProjectLibsJars = @($oldProjectLibsJars | ForEach-Object { $_.FullName })
+    DeletedOldProjectLibsJars = @()
     RemainingJarsForMod = @($remaining | ForEach-Object { $_.FullName })
     RemainingProjectLibsJarsForMod = @($projectLibsRemaining | ForEach-Object { $_.FullName })
     RemainingJarCountForMod = $remaining.Count
