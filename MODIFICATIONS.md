@@ -17,7 +17,8 @@ This file records material changes made while preparing the unofficial 1.21.1 Ne
 | `src/main/resources/META-INF/neoforge.mods.toml` | Preserve UMC-generated NeoForge metadata, set LGPL license text, mark the display name as Immersive Railroading Reforged, add project URL, description, and logo file. |
 | `src/main/resources/pack.mcmeta` | Update resource pack format for Minecraft 1.21.1. |
 | `src/main/resources/immersive_railroading_neoforge_icon.png` | Add supplied port logo resource. |
-| `install-mod.ps1` | Add repeatable Windows build/install verification for the Prism LAB mods folder, including runtime JAR selection, old same-mod JAR removal, hash checks, and `build/install-report.json`. |
+| `install-mod.ps1` | Add repeatable Windows build/install verification for the Prism LAB mods folder, including runtime JAR selection, old same-mod JAR removal, required dependency copying, project `lib` mirroring, hash checks, and `build/install-report.json`. |
+| `lib/README.md` | Document the local ignored JAR mirror populated by `install-mod.ps1`. |
 | `NOTICE.md`, `THIRD_PARTY_LICENSES.md`, `PORTING_STATUS.md`, `COMPATIBILITY_MATRIX.md`, `MIGRATION_NOTES.md`, `TEST_PLAN.md` | Add required status, compliance, migration, and validation documentation for the port. |
 
 No gameplay algorithms, registry names, resource-pack formats, NBT keys, rolling-stock definitions, or physics code have been intentionally changed in this session.
