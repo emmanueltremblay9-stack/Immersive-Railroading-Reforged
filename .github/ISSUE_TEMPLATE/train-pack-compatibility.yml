@@ -1,0 +1,119 @@
+name: Train pack compatibility
+description: Report compatibility results for an external Immersive Railroading train/resource pack.
+title: "[Train Pack Compatibility]: "
+labels:
+  - compatibility
+  - train-pack
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to report pack-by-pack compatibility evidence. External train/resource-pack support is planned, but existing IR packs are compatibility targets, not guaranteed to work yet.
+
+  - type: input
+    id: train_pack_name
+    attributes:
+      label: Train pack name
+      description: Name of the train/resource pack being tested.
+      placeholder: Example Train Pack
+    validations:
+      required: true
+
+  - type: input
+    id: author
+    attributes:
+      label: Author
+      description: Known author or maintainer of the pack.
+      placeholder: Pack author
+    validations:
+      required: true
+
+  - type: input
+    id: source_link
+    attributes:
+      label: Source link
+      description: Link to the official source, download page, repository, or release page.
+      placeholder: https://...
+    validations:
+      required: true
+
+  - type: input
+    id: license
+    attributes:
+      label: License
+      description: License shown by the pack source, if any.
+      placeholder: Unknown / custom / CC-BY / all rights reserved / other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: permission_status
+    attributes:
+      label: Permission status
+      description: Whether testing, redistribution, or bundled use is permitted.
+      options:
+        - Unknown
+        - Testing only
+        - Redistribution permitted
+        - Author permission granted
+        - Permission denied
+        - Not applicable
+    validations:
+      required: true
+
+  - type: input
+    id: tested_minecraft_version
+    attributes:
+      label: Tested Minecraft version
+      placeholder: "1.21.1"
+    validations:
+      required: true
+
+  - type: input
+    id: tested_mod_version
+    attributes:
+      label: Tested mod version
+      placeholder: "1.21.1-neoforge-..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: loaded_correctly
+    attributes:
+      label: What loaded correctly?
+      description: List locomotives, rolling stock, textures, models, sounds, menus, or other content that worked.
+      placeholder: |
+        - Stock index loaded:
+        - Definitions loaded:
+        - Models/textures/sounds loaded:
+    validations:
+      required: true
+
+  - type: textarea
+    id: failed
+    attributes:
+      label: What failed?
+      description: Describe missing assets, parse errors, broken models, missing sounds, crashes, or behavior differences.
+      placeholder: |
+        - Missing assets:
+        - Loader errors:
+        - In-game issues:
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant log excerpts or attach log files. Include only the relevant section when possible.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag screenshots here if visuals help show loaded content or failures.
+    validations:
+      required: false

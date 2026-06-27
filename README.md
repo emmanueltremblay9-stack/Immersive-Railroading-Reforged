@@ -30,6 +30,15 @@ git clone --recurse-submodules https://github.com/emmanueltremblay9-stack/Immers
 
 Current evidence and blockers are tracked in [PORTING_STATUS.md](PORTING_STATUS.md). Compatibility and release validation are tracked in [COMPATIBILITY_MATRIX.md](COMPATIBILITY_MATRIX.md), [MIGRATION_NOTES.md](MIGRATION_NOTES.md), and [TEST_PLAN.md](TEST_PLAN.md).
 
+## External Train / Resource Pack Support
+
+External train/resource-pack support is planned. The goal is to preserve the original Immersive Railroading design where creators can add locomotives, rolling stock, models, textures, sounds, and definitions without modifying the base mod. Existing IR packs are a compatibility target, but compatibility will be tested pack-by-pack. If the old format cannot be loaded directly, an adapter or converter may be used. Until the loader format is finalized, creator documentation should be treated as draft/spec work, not a stable pack API.
+
+Roadmap and compatibility tracking:
+
+- [Train pack support roadmap](docs/TRAIN_PACK_SUPPORT.md)
+- [Train pack compatibility matrix](docs/TRAIN_PACK_COMPATIBILITY.md)
+
 <p align="center">
   <a href="https://minecraft.curseforge.com/projects/immersive-railroading">
     <img src="http://cf.way2muchnoise.eu/full_277736_downloads.svg">
@@ -73,8 +82,8 @@ We also recommend to add these mods for full functionality of Immersive Railroad
  - [In-Game-Wiki Mod](https://minecraft.curseforge.com/projects/in-game-wiki-mod)
   
 ## Rolling stock
-The main mod contains only a few trains. If you want to add more trains to your game, you can do that with [Resource Packs](https://github.com/cam72cam/ImmersiveRailroading/wiki/Resource-packs-(outside-sources)) from our Modelers and Community.
-If you want to add your own train models as resource pack to the game, please make sure to check out the *#modeling* Channel on our [Discord](https://discordapp.com/invite/CS2RTGq) and the pinned Messages in that Channel.
+The original Immersive Railroading design allowed additional trains through external resource packs. For the 1.21.1 NeoForge port, that remains a compatibility target and roadmap item, but existing packs must be tested pack-by-pack before compatibility is claimed.
+Creator-facing documentation in this repository is currently draft/spec work unless a document explicitly marks the format as stable.
 
 ## Bugs and Suggestions
 If you found a bug please open an Issue here on GitHub or report it in the *#bug-reports* Channel on our [Discord](https://discordapp.com/invite/CS2RTGq).
