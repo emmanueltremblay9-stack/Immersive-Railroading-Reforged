@@ -17,7 +17,7 @@ configurations {
 apply plugin: 'maven-publish'
 
 
-version = '1.21.1-neoforge-1.10.2'
+version = '1.21.1-neoforge-1.10.28'
 if (!"release".equalsIgnoreCase(System.getProperty("target"))) {
     try {
         version += "-" + 'git rev-parse --verify --short=7 HEAD'.execute().text.trim()
@@ -121,12 +121,8 @@ processResources {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     inputs.property "version", project.version
     inputs.property "mcversion", "1.21.1"
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
+    filesMatching(['mcmod.info', 'META-INF/neoforge.mods.toml']) {
         expand 'version':project.version, 'mcversion':"1.21.1"
-    }
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
     }
 }
 
@@ -157,6 +153,747 @@ tasks.register('showBuildInfo') {
         System.out.println("https://teamopenindustry.cc/maven/cam72cam/immersiverailroading/ImmersiveRailroading/${version}/ImmersiveRailroading-${version}.jar")
         System.out.println("https://teamopenindustry.cc/maven/cam72cam/universalmodcore/UniversalModCore/${umcVersionString}/UniversalModCore-${umcVersionString}.jar")
     }
+}
+
+tasks.register('validateEngineersManual') {
+    group = 'verification'
+    description = 'Validates first-party Engineer Manual resources, links, coverage, and translations.'
+    doLast {
+        def reportDir = file('build/reports/engineers-manual')
+        reportDir.mkdirs()
+        def errors = []
+        def warnings = []
+        def manualRoot = file('src/main/resources/assets/immersiverailroading/engineers_manual')
+        if (!manualRoot.isDirectory()) {
+            errors << "Engineer Manual resource root is missing: ${manualRoot}"
+        }
+
+        def slurper = new groovy.json.JsonSlurper()
+        def resourceIdPattern = ~'^[a-z0-9_.-]+:[a-z0-9_./-]+$'
+        def translationKeyPattern = ~'^manual\\.immersiverailroading\\.[a-z0-9_.-]+$'
+        def allowedWidgetTypes = ['heading', 'text', 'callout', 'link', 'item_stack', 'table', 'procedure'] as Set
+        def allowedCalloutStyles = ['info', 'tip', 'warning', 'danger'] as Set
+        def requiredDocs = [
+                'README.md',
+                'AUTHORING.md',
+                'SCHEMA.md',
+                'WIDGETS.md',
+                'LOCALIZATION.md',
+                'CONTRIBUTIONS.md',
+                'TESTING.md',
+                'DECISIONS.md',
+                'SKILLS_USED.md',
+                'CONTENT_MAP.md',
+                'AUDIT.md',
+                'DEPENDENCY_MATRIX.md',
+                'FEATURE_COVERAGE.csv',
+                'FULL_CONTENT.json',
+                'schema/engineers-manual.schema.json'
+        ]
+        requiredDocs.each { path ->
+            if (!file("docs/engineers-manual/${path}").isFile()) {
+                errors << "Missing Engineer Manual documentation file docs/engineers-manual/${path}"
+            }
+        }
+
+        def parseJson = { File source ->
+            try {
+                return slurper.parse(source)
+            } catch (Exception ex) {
+                errors << "Invalid JSON in ${source}: ${ex.message}"
+                return null
+            }
+        }
+
+        def requireFields = { String label, def object, List<String> fields ->
+            fields.each { field ->
+                if (!(object instanceof Map) || !object.containsKey(field)) {
+                    errors << "${label} is missing required field '${field}'"
+                }
+            }
+        }
+        def requireResourceId = { String label, def value ->
+            if (!(value instanceof String) || !(value ==~ resourceIdPattern)) {
+                errors << "${label} must be a namespaced resource id, got '${value}'"
+            }
+        }
+        def collectTranslationKey = { String label, def value, Set<String> keys ->
+            if (!(value instanceof String) || !(value ==~ translationKeyPattern)) {
+                errors << "${label} must be a manual translation key, got '${value}'"
+            } else {
+                keys.add(value)
+            }
+        }
+
+        def schemaFile = file('docs/engineers-manual/schema/engineers-manual.schema.json')
+        if (schemaFile.isFile()) {
+            parseJson(schemaFile)
+        }
+        def fullContentFile = file('docs/engineers-manual/FULL_CONTENT.json')
+        if (fullContentFile.isFile()) {
+            parseJson(fullContentFile)
+        }
+
+        def bookFile = new File(manualRoot, 'book.json')
+        if (!bookFile.isFile()) {
+            errors << "Engineer Manual book.json is missing"
+        }
+        def book = bookFile.isFile() ? parseJson(bookFile) : null
+        def translationKeys = [] as Set
+        if (book != null) {
+            requireFields('book.json', book, ['schema_version', 'id', 'title', 'subtitle', 'icon', 'theme', 'landing_entry', 'default_locale', 'fallback_locale', 'sort_order'])
+            requireResourceId('book.json id', book.id)
+            requireResourceId('book.json landing_entry', book.landing_entry)
+            collectTranslationKey('book.json title', book.title, translationKeys)
+            collectTranslationKey('book.json subtitle', book.subtitle, translationKeys)
+            if (book.default_locale != 'en_us') {
+                errors << "book.json default_locale must currently be en_us"
+            }
+            if (book.fallback_locale != 'en_us') {
+                errors << "book.json fallback_locale must currently be en_us"
+            }
+        }
+
+        def categories = fileTree(new File(manualRoot, 'categories')) { include '**/*.json' }.files.sort()
+        def entries = fileTree(new File(manualRoot, 'entries')) { include '**/*.json' }.files.sort()
+        if (categories.empty) {
+            errors << "Engineer Manual has no categories"
+        }
+        if (entries.empty) {
+            errors << "Engineer Manual has no entries"
+        }
+
+        def ieManualRoot = file('src/main/resources/assets/immersiverailroading/manual')
+        def ieIntegrationManualRoot = file('src/main/resources/assets/immersiveengineering/manual')
+        def ieAutoloadFile = new File(ieIntegrationManualRoot, 'autoload.json')
+        def ieEntryFiles = ieManualRoot.isDirectory()
+                ? fileTree(ieManualRoot) { include '*.json'; exclude 'autoload.json' }.files.sort()
+                : []
+        def ieEnTextFiles = new File(ieManualRoot, 'en_us').isDirectory()
+                ? fileTree(new File(ieManualRoot, 'en_us')) { include '*.txt' }.files.sort()
+                : []
+        def ieFrTextFiles = new File(ieManualRoot, 'fr_fr').isDirectory()
+                ? fileTree(new File(ieManualRoot, 'fr_fr')) { include '*.txt' }.files.sort()
+                : []
+        if (!ieManualRoot.isDirectory()) {
+            errors << "Immersive Engineering manual content root is missing: ${ieManualRoot}"
+        }
+        if (!ieIntegrationManualRoot.isDirectory()) {
+            errors << "Immersive Engineering manual integration root is missing: ${ieIntegrationManualRoot}"
+        }
+        if (!ieAutoloadFile.isFile()) {
+            errors << "Immersive Engineering manual autoload.json is missing from IE namespace root: ${ieAutoloadFile}"
+        }
+        def ieAutoload = ieAutoloadFile.isFile() ? parseJson(ieAutoloadFile) : null
+        def ieAutoloadCategory = ieAutoload instanceof Map
+                ? ieAutoload['immersiverailroading:immersive_railroading']
+                : null
+        def ieAutoloadEntryList = ieAutoloadCategory instanceof Map ? ieAutoloadCategory.entry_list : null
+        if (!(ieAutoloadEntryList instanceof List)) {
+            errors << "Immersive Engineering manual autoload.json must declare immersiverailroading:immersive_railroading.entry_list"
+        }
+        if (ieAutoload instanceof Map && ieAutoload.autoload_priority != 3) {
+            errors << "Immersive Engineering manual autoload_priority must be 3"
+        }
+        if (ieAutoloadCategory instanceof Map && ieAutoloadCategory.category_weight != 102) {
+            errors << "Immersive Engineering manual category_weight must be 102"
+        }
+        if (ieEntryFiles.size() != entries.size()) {
+            errors << "Immersive Engineering manual JSON entry count ${ieEntryFiles.size()} does not match IR entry count ${entries.size()}"
+        }
+        if (ieEnTextFiles.size() != entries.size()) {
+            errors << "Immersive Engineering manual en_us text count ${ieEnTextFiles.size()} does not match IR entry count ${entries.size()}"
+        }
+        if (ieFrTextFiles.size() != entries.size()) {
+            errors << "Immersive Engineering manual fr_fr text count ${ieFrTextFiles.size()} does not match IR entry count ${entries.size()}"
+        }
+        if (ieAutoloadEntryList instanceof List && ieAutoloadEntryList.size() != entries.size()) {
+            errors << "Immersive Engineering manual autoload entry count ${ieAutoloadEntryList.size()} does not match IR entry count ${entries.size()}"
+        }
+        if (ieAutoloadEntryList instanceof List) {
+            def expectedIeEntryRefs = ieEntryFiles.collect { ("immersiverailroading:${it.name.replaceFirst(/\.json$/, '')}").toString() } as Set
+            def actualIeEntryRefs = ieAutoloadEntryList.collect { it.toString() } as Set
+            def unqualifiedEntries = actualIeEntryRefs.findAll { !(it ==~ /^immersiverailroading:[a-z0-9_.-]+$/) }.sort()
+            if (!unqualifiedEntries.empty) {
+                errors << "Immersive Engineering manual autoload entries must be fully namespaced IR resource ids: ${unqualifiedEntries}"
+            }
+            def missingAutoloadEntries = expectedIeEntryRefs.findAll { !actualIeEntryRefs.contains(it) }.sort()
+            def unknownAutoloadEntries = actualIeEntryRefs.findAll { !expectedIeEntryRefs.contains(it) }.sort()
+            if (!missingAutoloadEntries.empty) {
+                errors << "Immersive Engineering manual autoload is missing entries: ${missingAutoloadEntries}"
+            }
+            if (!unknownAutoloadEntries.empty) {
+                errors << "Immersive Engineering manual autoload references unknown entries: ${unknownAutoloadEntries}"
+            }
+        }
+        ['en_us', 'fr_fr'].each { locale ->
+            def langJsonFile = file("src/main/resources/assets/immersiverailroading/lang/${locale}.json")
+            if (!langJsonFile.isFile()) {
+                errors << "Missing JSON language file required by Immersive Engineering manual category ${langJsonFile}"
+            } else {
+                def langJson = parseJson(langJsonFile)
+                if (!(langJson instanceof Map) || langJson['manual.immersiverailroading.immersive_railroading'] != 'Immersive Railroading Reforged') {
+                    errors << "${locale}.json is missing manual.immersiverailroading.immersive_railroading"
+                }
+            }
+        }
+        def categoryIds = [] as Set
+        def categoryParents = [:]
+        categories.each { file ->
+            def category = parseJson(file)
+            if (category == null) {
+                return
+            }
+            requireFields("${file}", category, ['schema_version', 'id', 'title', 'description', 'icon', 'sort_order'])
+            requireResourceId("${file} id", category.id)
+            collectTranslationKey("${file} title", category.title, translationKeys)
+            collectTranslationKey("${file} description", category.description, translationKeys)
+            if (!categoryIds.add(category.id)) {
+                errors << "Duplicate Engineer Manual category id '${category.id}'"
+            }
+            if (category.parent) {
+                requireResourceId("${file} parent", category.parent)
+                categoryParents[category.id] = category.parent
+            }
+        }
+
+        def entryIds = [] as Set
+        def entryRelatedEntries = [:]
+        def entryFeatureIds = [:]
+        entries.each { file ->
+            def entry = parseJson(file)
+            if (entry == null) {
+                return
+            }
+            requireFields("${file}", entry, ['schema_version', 'id', 'category', 'title', 'icon', 'sort_order', 'keywords', 'aliases', 'conditions', 'pages', 'related_entries', 'source_feature_ids', 'technical', 'hidden'])
+            requireResourceId("${file} id", entry.id)
+            requireResourceId("${file} category", entry.category)
+            collectTranslationKey("${file} title", entry.title, translationKeys)
+            if (!entryIds.add(entry.id)) {
+                errors << "Duplicate Engineer Manual entry id '${entry.id}'"
+            }
+            if (!categoryIds.contains(entry.category)) {
+                errors << "${file} references missing category '${entry.category}'"
+            }
+            if (!(entry.pages instanceof List) || entry.pages.isEmpty()) {
+                errors << "${file} has no visible pages"
+            }
+            if (!(entry.keywords instanceof List)) {
+                errors << "${file} keywords must be a list"
+            }
+            if (!(entry.aliases instanceof List)) {
+                errors << "${file} aliases must be a list"
+            }
+            if (!(entry.conditions instanceof List)) {
+                errors << "${file} conditions must be a list"
+            }
+            if (!(entry.related_entries instanceof List)) {
+                errors << "${file} related_entries must be a list"
+            }
+            if (!(entry.source_feature_ids instanceof List) || entry.source_feature_ids.isEmpty()) {
+                errors << "${file} source_feature_ids must be a non-empty list"
+            } else {
+                entryFeatureIds[entry.id] = entry.source_feature_ids.collect { it.toString() }
+            }
+            if (!(entry.technical instanceof Boolean)) {
+                errors << "${file} technical must be a boolean"
+            }
+            if (!(entry.hidden instanceof Boolean)) {
+                errors << "${file} hidden must be a boolean"
+            }
+            (entry.keywords ?: []).each { collectTranslationKey("${file} keyword", it, translationKeys) }
+            entryRelatedEntries[entry.id] = (entry.related_entries ?: []).collect { it.toString() }
+            (entry.related_entries ?: []).each { requireResourceId("${file} related entry", it) }
+            entry.pages?.eachWithIndex { page, index ->
+                if (!(page instanceof Map)) {
+                    errors << "${file} page ${index} must be an object"
+                    return
+                }
+                if (!(page.type instanceof String)) {
+                    errors << "${file} page ${index} has no widget type"
+                } else if (!allowedWidgetTypes.contains(page.type)) {
+                    errors << "${file} page ${index} uses unsupported widget type '${page.type}'"
+                }
+                if (page.type == 'callout' && page.style && !allowedCalloutStyles.contains(page.style)) {
+                    errors << "${file} page ${index} uses unsupported callout style '${page.style}'"
+                }
+                if (page.text) {
+                    collectTranslationKey("${file} page ${index} text", page.text, translationKeys)
+                }
+                if (page.entry) {
+                    requireResourceId("${file} page ${index} entry link", page.entry)
+                }
+                if (page.url && !(page.url.toString() ==~ /^https?:\/\/.+/)) {
+                    errors << "${file} page ${index} external URL must use http or https"
+                }
+            }
+        }
+
+        if (book != null && !entryIds.contains(book.landing_entry)) {
+            errors << "book.json landing_entry '${book.landing_entry}' does not exist"
+        }
+
+        categoryParents.each { id, parent ->
+            if (!categoryIds.contains(parent)) {
+                errors << "Category '${id}' references missing parent '${parent}'"
+            }
+            def seen = [] as Set
+            def current = id
+            while (current != null && categoryParents.containsKey(current)) {
+                if (!seen.add(current)) {
+                    errors << "Category parent cycle detected at '${current}'"
+                    break
+                }
+                current = categoryParents[current]
+            }
+        }
+
+        entryRelatedEntries.each { id, related ->
+            related.each { target ->
+                if (!entryIds.contains(target)) {
+                    errors << "Entry '${id}' references missing related entry '${target}'"
+                }
+            }
+        }
+
+        def readLang = { String locale ->
+            def langFile = file("src/main/resources/assets/immersiverailroading/lang/${locale}.lang")
+            if (!langFile.isFile()) {
+                errors << "Missing language file ${langFile}"
+                return [:]
+            }
+            def keys = [:]
+            langFile.eachLine('UTF-8') { line ->
+                def trimmed = line.trim()
+                if (trimmed && !trimmed.startsWith('#') && trimmed.contains('=')) {
+                    def idx = trimmed.indexOf('=')
+                    keys[trimmed.substring(0, idx)] = trimmed.substring(idx + 1)
+                }
+            }
+            keys
+        }
+        def locales = ['en_us', 'fr_fr']
+        def missing = [:]
+        locales.each { locale ->
+            def langKeys = readLang(locale)
+            def missingKeys = translationKeys.findAll { !langKeys.containsKey(it) }.sort()
+            if (!missingKeys.empty) {
+                missing[locale] = missingKeys
+            }
+            langKeys.findAll { key, value -> key.startsWith('manual.immersiverailroading.') }.each { key, value ->
+                if (value ==~ /(?i).*(TODO|TBD|lorem ipsum|placeholder|\[Need translate\]).*/) {
+                    errors << "${locale} manual key '${key}' contains placeholder text"
+                }
+            }
+        }
+        if (!missing.isEmpty()) {
+            errors << "Missing Engineer Manual translation keys: ${missing}"
+        }
+
+        def coverageFile = file('docs/engineers-manual/FEATURE_COVERAGE.csv')
+        def coverageFeatureIds = [] as Set
+        def coveredEntryIds = [] as Set
+        def coverageRows = []
+        if (!coverageFile.isFile()) {
+            errors << "Missing ${coverageFile}"
+        } else {
+            def expectedHeader = 'feature_id,owning_mod,feature_type,registry_or_class,player_visible,developer_visible,manual_category,manual_entry_id,en_us_status,fr_fr_status,screenshot_required,test_required,implementation_status,notes'
+            def lines = coverageFile.readLines('UTF-8').findAll { it.trim() }
+            if (!lines.empty) {
+                lines[0] = lines[0].replace('\uFEFF', '')
+            }
+            if (lines.empty || lines[0] != expectedHeader) {
+                errors << "Feature coverage CSV header does not match the required contract"
+            }
+            lines.drop(1).eachWithIndex { line, index ->
+                def row = line.split(',', 14)
+                if (row.length != 14) {
+                    errors << "Feature coverage row ${index + 2} must have 14 columns"
+                    return
+                }
+                coverageRows << row
+                if (!coverageFeatureIds.add(row[0])) {
+                    errors << "Duplicate feature coverage id '${row[0]}'"
+                }
+                requireResourceId("Feature coverage row ${index + 2} manual_entry_id", row[7])
+                if (!(row[4] in ['yes', 'no'])) {
+                    errors << "Feature coverage row ${index + 2} player_visible must be yes or no"
+                }
+                if (!(row[5] in ['yes', 'no'])) {
+                    errors << "Feature coverage row ${index + 2} developer_visible must be yes or no"
+                }
+                if (!(row[8] in ['planned', 'scaffolded', 'complete', 'generated'])) {
+                    errors << "Feature coverage row ${index + 2} has invalid en_us_status '${row[8]}'"
+                }
+                if (!(row[9] in ['planned', 'scaffolded', 'complete', 'generated'])) {
+                    errors << "Feature coverage row ${index + 2} has invalid fr_fr_status '${row[9]}'"
+                }
+                if (!(row[12] in ['planned', 'scaffolded', 'documented', 'generated'])) {
+                    errors << "Feature coverage row ${index + 2} has invalid implementation_status '${row[12]}'"
+                }
+                if (row[12] in ['scaffolded', 'documented', 'generated']) {
+                    coveredEntryIds.add(row[7])
+                }
+            }
+        }
+        entryFeatureIds.each { entryId, featureIds ->
+            featureIds.each { featureId ->
+                if (!coverageFeatureIds.contains(featureId)) {
+                    errors << "Entry '${entryId}' references source_feature_id '${featureId}' not present in FEATURE_COVERAGE.csv"
+                }
+            }
+        }
+        coveredEntryIds.each { entryId ->
+            if (!entryIds.contains(entryId)) {
+                errors << "FEATURE_COVERAGE.csv marks '${entryId}' as covered but no matching entry resource exists"
+            }
+        }
+
+        def validationReport = [
+                status: errors.empty ? 'ok' : 'failed',
+                book_id: book?.id,
+                category_count: categoryIds.size(),
+                entry_count: entryIds.size(),
+                immersive_engineering_manual_autoload: 'assets/immersiveengineering/manual/autoload.json',
+                immersive_engineering_manual_category: 'immersiverailroading:immersive_railroading',
+                immersive_engineering_manual_entry_count: ieEntryFiles.size(),
+                immersive_engineering_manual_en_us_text_count: ieEnTextFiles.size(),
+                immersive_engineering_manual_fr_fr_text_count: ieFrTextFiles.size(),
+                translation_key_count: translationKeys.size(),
+                coverage_feature_count: coverageFeatureIds.size(),
+                allowed_widget_types: allowedWidgetTypes.sort(),
+                warnings: warnings,
+                errors: errors
+        ]
+        new File(reportDir, 'manual-validation.json').text =
+                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(validationReport))
+
+        if (!errors.empty) {
+            throw new GradleException("Engineer Manual validation failed:\n - ${errors.join('\n - ')}")
+        }
+    }
+}
+
+tasks.register('reportEngineersManualLocalization') {
+    group = 'verification'
+    description = 'Writes Engineer Manual localization coverage report.'
+    dependsOn tasks.named('validateEngineersManual')
+    doLast {
+        def reportDir = file('build/reports/engineers-manual')
+        reportDir.mkdirs()
+        def countKeys = { String locale ->
+            def keys = [] as Set
+            file("src/main/resources/assets/immersiverailroading/lang/${locale}.lang").eachLine('UTF-8') { line ->
+                def trimmed = line.trim()
+                if (trimmed ==~ /manual\.immersiverailroading\.[^=]+=.+/) {
+                    keys.add(trimmed.substring(0, trimmed.indexOf('=')))
+                }
+            }
+            keys
+        }
+        def en = countKeys('en_us')
+        def fr = countKeys('fr_fr')
+        def report = [
+                en_us_key_count: en.size(),
+                fr_fr_key_count: fr.size(),
+                shared_key_count: en.intersect(fr).size(),
+                missing_fr_fr: en.findAll { !fr.contains(it) }.sort(),
+                missing_en_us: fr.findAll { !en.contains(it) }.sort()
+        ]
+        new File(reportDir, 'localization-coverage.json').text =
+                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(report))
+    }
+}
+
+tasks.register('reportEngineersManualCoverage') {
+    group = 'verification'
+    description = 'Writes a coverage summary from docs/engineers-manual/FEATURE_COVERAGE.csv.'
+    doLast {
+        def csv = file('docs/engineers-manual/FEATURE_COVERAGE.csv')
+        if (!csv.isFile()) {
+            throw new GradleException("Missing ${csv}")
+        }
+        def lines = csv.readLines('UTF-8').findAll { it.trim() }
+        if (lines.size() < 2) {
+            throw new GradleException("Feature coverage CSV has no feature rows")
+        }
+        def rows = lines.drop(1).collect { it.split(',', 14) }
+        def total = rows.size()
+        def covered = rows.count { it.size() > 12 && it[12] in ['scaffolded', 'documented', 'generated'] }
+        def playerVisible = rows.findAll { it.size() > 4 && it[4] == 'yes' }
+        def uncoveredPlayerVisible = playerVisible.findAll { !(it.size() > 12 && it[12] in ['scaffolded', 'documented', 'generated']) }
+        def report = [
+                total_features: total,
+                covered_or_scaffolded_features: covered,
+                coverage_percent: total == 0 ? 0 : BigDecimal.valueOf((covered * 100.0d) / total).setScale(2, BigDecimal.ROUND_HALF_UP),
+                player_visible_features: playerVisible.size(),
+                uncovered_player_visible_features: uncoveredPlayerVisible.collect { it[0] },
+                uncovered_player_visible_count: uncoveredPlayerVisible.size()
+        ]
+        def reportDir = file('build/reports/engineers-manual')
+        reportDir.mkdirs()
+        new File(reportDir, 'feature-coverage.json').text =
+                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(report))
+    }
+}
+
+tasks.register('testEngineersManual') {
+    group = 'verification'
+    description = 'Runs Engineer Manual validation and report generation checks.'
+    dependsOn tasks.named('validateEngineersManual')
+    dependsOn tasks.named('reportEngineersManualLocalization')
+    dependsOn tasks.named('reportEngineersManualCoverage')
+}
+
+tasks.register('verifyManualExamples') {
+    group = 'verification'
+    description = 'Verifies parseable manual documentation examples that are present in this IR-owned scope.'
+    dependsOn tasks.named('validateEngineersManual')
+    doLast {
+        def errors = []
+        def verifiedJsonExamples = 0
+        def docs = fileTree('docs/engineers-manual') { include '**/*.md' }.files.sort()
+        docs.each { doc ->
+            def inFence = false
+            def fenceLang = ''
+            def fenceStart = 0
+            def buffer = []
+            int lineNo = 0
+            doc.eachLine('UTF-8') { line ->
+                lineNo++
+                if (line.startsWith('```')) {
+                    if (!inFence) {
+                        inFence = true
+                        fenceLang = line.substring(3).trim().toLowerCase(Locale.ROOT)
+                        fenceStart = lineNo
+                        buffer = []
+                    } else {
+                        if (fenceLang in ['json', 'jsonc']) {
+                            try {
+                                new groovy.json.JsonSlurper().parseText(buffer.join('\n'))
+                                verifiedJsonExamples++
+                            } catch (Exception ex) {
+                                errors << "${doc}:${fenceStart} contains invalid ${fenceLang} example: ${ex.message}"
+                            }
+                        }
+                        inFence = false
+                    }
+                } else if (inFence) {
+                    buffer << line
+                }
+            }
+            if (inFence) {
+                errors << "${doc}:${fenceStart} has an unterminated fenced code block"
+            }
+        }
+
+        def reportDir = file('build/reports/engineers-manual')
+        reportDir.mkdirs()
+        def report = [
+                status: errors.empty ? 'ok' : 'failed',
+                verified_json_examples: verifiedJsonExamples,
+                trackapi_umc_api_examples_skipped_by_user_scope: true,
+                errors: errors
+        ]
+        new File(reportDir, 'example-verification.json').text =
+                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(report))
+
+        if (!errors.empty) {
+            throw new GradleException("Engineer Manual example verification failed:\n - ${errors.join('\n - ')}")
+        }
+    }
+}
+
+tasks.register('validateExternalTrainPackTemplate') {
+    group = 'verification'
+    description = 'Validates the external train/resource-pack template and writes a report.'
+    doLast {
+        def packRoot = project.hasProperty('trainPackDir')
+                ? file(project.property('trainPackDir'))
+                : file('examples/train-pack-template')
+        def sourceAssetsRoot = file('src/main/resources/assets')
+        def reportDir = file('build/reports/train-packs')
+        reportDir.mkdirs()
+        def errors = []
+        def warnings = []
+        def slurper = new groovy.json.JsonSlurper()
+        def stockTypes = ['locomotives', 'tender', 'passenger', 'freight', 'tank', 'hand_car']
+
+        def parseJson = { File source ->
+            try {
+                return slurper.parse(source)
+            } catch (Exception ex) {
+                errors << "Invalid JSON in ${source}: ${ex.message}"
+                return null
+            }
+        }
+        def hasDataExtension = { String path ->
+            def lower = path.toLowerCase(Locale.ROOT)
+            lower.endsWith('.json') || lower.endsWith('.caml')
+        }
+        def resolveStockEntry = { String stockType, String entry ->
+            def namespace = 'immersiverailroading'
+            def path = entry
+            def namespaced = entry.contains(':')
+            if (namespaced) {
+                def parts = entry.split(':', 2)
+                namespace = parts[0]
+                path = parts[1]
+                if (!path.startsWith('rolling_stock/')) {
+                    path = "rolling_stock/${stockType}/${path}"
+                }
+            } else {
+                path = "rolling_stock/${stockType}/${entry}"
+            }
+            if (!hasDataExtension(path)) {
+                path += '.json'
+            }
+            [namespace: namespace, path: path, id: namespaced ? "${namespace}:${path}" : path]
+        }
+        def definitionFile = { def ref ->
+            def primary = new File(packRoot, "assets/${ref.namespace}/${ref.path}")
+            if (primary.isFile()) {
+                return primary
+            }
+            def alternatePath = ref.path.toLowerCase(Locale.ROOT).endsWith('.json')
+                    ? ref.path.replaceFirst('(?i)\\.json$', '.caml')
+                    : ref.path.replaceFirst('(?i)\\.caml$', '.json')
+            def alternate = new File(packRoot, "assets/${ref.namespace}/${alternatePath}")
+            alternate.isFile() ? alternate : primary
+        }
+        def resolveIdentifierPath = { String value ->
+            if (value == null || value.trim().isEmpty()) {
+                return null
+            }
+            def namespace = 'immersiverailroading'
+            def path = value.trim()
+            if (path.contains(':')) {
+                def parts = path.split(':', 2)
+                namespace = parts[0]
+                path = parts[1]
+            }
+            [namespace: namespace, path: path]
+        }
+        def assetExists = { String value ->
+            def ref = resolveIdentifierPath(value)
+            if (ref == null) {
+                return false
+            }
+            new File(packRoot, "assets/${ref.namespace}/${ref.path}").isFile()
+                    || new File(sourceAssetsRoot, "${ref.namespace}/${ref.path}").isFile()
+        }
+        def requireMap = { String label, def object, String key ->
+            if (!(object instanceof Map) || !(object[key] instanceof Map)) {
+                errors << "${label} is missing required object '${key}'"
+                return null
+            }
+            object[key]
+        }
+
+        if (!packRoot.isDirectory()) {
+            errors << "Train pack template root is missing: ${packRoot}"
+        }
+        def packMeta = new File(packRoot, 'pack.mcmeta')
+        if (!packMeta.isFile()) {
+            errors << "Missing ${packMeta}"
+        } else {
+            def parsed = parseJson(packMeta)
+            if (!(parsed instanceof Map) || !(parsed.pack instanceof Map)) {
+                errors << "${packMeta} must contain a top-level pack object"
+            }
+        }
+
+        def stockIndex = new File(packRoot, 'assets/immersiverailroading/rolling_stock/stock.json')
+        def validatedDefinitions = []
+        if (!stockIndex.isFile()) {
+            errors << "Missing stock index ${stockIndex}"
+        } else {
+            def index = parseJson(stockIndex)
+            if (index instanceof Map) {
+                stockTypes.each { stockType ->
+                    def entries = index[stockType]
+                    if (entries == null) {
+                        return
+                    }
+                    if (!(entries instanceof List)) {
+                        errors << "${stockIndex} field '${stockType}' must be a list"
+                        return
+                    }
+                    entries.each { rawEntry ->
+                        if (!(rawEntry instanceof String) || rawEntry.trim().isEmpty()) {
+                            errors << "${stockIndex} field '${stockType}' contains a blank or non-string entry"
+                            return
+                        }
+                        def ref = resolveStockEntry(stockType, rawEntry)
+                        def defFile = definitionFile(ref)
+                        if (!defFile.isFile()) {
+                            errors << "Missing definition for stock index entry '${rawEntry}' at ${defFile}"
+                            return
+                        }
+                        validatedDefinitions << ref.id
+                        if (defFile.name.toLowerCase(Locale.ROOT).endsWith('.json')) {
+                            def definition = parseJson(defFile)
+                            if (definition instanceof Map) {
+                                ['name', 'model'].each { key ->
+                                    if (!(definition[key] instanceof String) || definition[key].trim().isEmpty()) {
+                                        errors << "${defFile} is missing required string '${key}'"
+                                    }
+                                }
+                                if (definition.model instanceof String && !assetExists(definition.model)) {
+                                    errors << "${defFile} references missing model asset '${definition.model}'"
+                                }
+                                def properties = requireMap("${defFile}", definition, 'properties')
+                                if (properties instanceof Map && !(properties.weight_kg instanceof Number)) {
+                                    errors << "${defFile} properties.weight_kg must be numeric"
+                                }
+                                requireMap("${defFile}", definition, 'passenger')
+                                def pivot = definition.trucks instanceof Map ? definition.trucks : definition.pivot
+                                if (!(pivot instanceof Map)) {
+                                    errors << "${defFile} must define trucks or pivot"
+                                }
+                                if (stockType == 'freight') {
+                                    def freight = requireMap("${defFile}", definition, 'freight')
+                                    if (freight instanceof Map && !(freight.slots instanceof Number)) {
+                                        errors << "${defFile} freight.slots must be numeric"
+                                    }
+                                }
+                                if (definition.sounds instanceof Map) {
+                                    definition.sounds.each { key, value ->
+                                        if (value instanceof String && value.endsWith('.ogg') && !assetExists(value)) {
+                                            warnings << "${defFile} references sound '${value}' that is not present in the template or base assets"
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            warnings << "${defFile} is CAML; structure validation is limited to presence in this task"
+                        }
+                    }
+                }
+            }
+        }
+
+        def report = [
+                status: errors.empty ? 'ok' : 'failed',
+                pack_root: packRoot.absolutePath,
+                stock_index: stockIndex.absolutePath,
+                validated_definitions: validatedDefinitions,
+                warnings: warnings,
+                errors: errors
+        ]
+        new File(reportDir, 'external-train-pack-template-validation.json').text =
+                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(report))
+
+        if (!errors.empty) {
+            throw new GradleException("External train pack template validation failed:\n - ${errors.join('\n - ')}")
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('testEngineersManual')
+    dependsOn tasks.named('verifyManualExamples')
+    dependsOn tasks.named('validateExternalTrainPackTemplate')
 }
 
 publish.finalizedBy showBuildInfo
