@@ -1,0 +1,335 @@
+{
+  "implementation_stage": "complete_first_party_ie_manual_export",
+  "additional_coverage_rows": [
+    {
+      "feature_id": "manual_getting_started",
+      "owning_mod": "immersiverailroading",
+      "feature_type": "manual",
+      "registry_or_class": "ItemManual + ItemTrackBlueprint",
+      "player_visible": "yes",
+      "developer_visible": "no",
+      "manual_category": "getting_started",
+      "manual_entry_id": "immersiverailroading:engineers_manual/getting_started",
+      "en_us_status": "complete",
+      "fr_fr_status": "complete",
+      "screenshot_required": "no",
+      "test_required": "yes",
+      "implementation_status": "documented",
+      "notes": "First-run workflow for manual access and first track placement."
+    },
+    {
+      "feature_id": "track_planning_gui",
+      "owning_mod": "immersiverailroading",
+      "feature_type": "manual",
+      "registry_or_class": "TrackGui + RailSettings",
+      "player_visible": "yes",
+      "developer_visible": "no",
+      "manual_category": "track_planning",
+      "manual_entry_id": "immersiverailroading:engineers_manual/track_planning",
+      "en_us_status": "complete",
+      "fr_fr_status": "complete",
+      "screenshot_required": "no",
+      "test_required": "yes",
+      "implementation_status": "documented",
+      "notes": "Explains planning choices before committing rail materials."
+    },
+    {
+      "feature_id": "gauge_registry",
+      "owning_mod": "immersiverailroading",
+      "feature_type": "track_resource",
+      "registry_or_class": "rolling_stock/gauges.json + Gauge",
+      "player_visible": "yes",
+      "developer_visible": "yes",
+      "manual_category": "gauges_and_scale",
+      "manual_entry_id": "immersiverailroading:engineers_manual/gauges_and_scale",
+      "en_us_status": "complete",
+      "fr_fr_status": "complete",
+      "screenshot_required": "no",
+      "test_required": "yes",
+      "implementation_status": "documented",
+      "notes": "Covers registered gauges and how gauge affects stock and track."
+    },
+    {
+      "feature_id": "resource_pack_loader",
+      "owning_mod": "immersiverailroading",
+      "feature_type": "resource_pack",
+      "registry_or_class": "DefinitionManager stock and track loaders",
+      "player_visible": "yes",
+      "developer_visible": "yes",
+      "manual_category": "resource_packs",
+      "manual_entry_id": "immersiverailroading:engineers_manual/resource_packs",
+      "en_us_status": "complete",
+      "fr_fr_status": "complete",
+      "screenshot_required": "no",
+      "test_required": "yes",
+      "implementation_status": "documented",
+      "notes": "Documents stock and track resource-pack loading behavior."
+    },
+    {
+      "feature_id": "troubleshooting_resources",
+      "owning_mod": "immersiverailroading",
+      "feature_type": "manual",
+      "registry_or_class": "DefinitionManager + EntityRollingStock.tryJoinWorld",
+      "player_visible": "yes",
+      "developer_visible": "yes",
+      "manual_category": "troubleshooting",
+      "manual_entry_id": "immersiverailroading:engineers_manual/troubleshooting",
+      "en_us_status": "complete",
+      "fr_fr_status": "complete",
+      "screenshot_required": "no",
+      "test_required": "yes",
+      "implementation_status": "documented",
+      "notes": "Explains missing resource packs and common manual or runtime checks."
+    },
+    {
+      "feature_id": "credits_legal_support",
+      "owning_mod": "immersiverailroading",
+      "feature_type": "manual",
+      "registry_or_class": "AUTHORS + LICENSE + NOTICE.md + THIRD_PARTY_LICENSES.md",
+      "player_visible": "yes",
+      "developer_visible": "yes",
+      "manual_category": "credits_support",
+      "manual_entry_id": "immersiverailroading:engineers_manual/credits_support",
+      "en_us_status": "complete",
+      "fr_fr_status": "complete",
+      "screenshot_required": "no",
+      "test_required": "yes",
+      "implementation_status": "documented",
+      "notes": "Points players to attribution and support files shipped with the port."
+    }
+  ],
+  "entries": {
+    "actuator": {
+      "body_en": "Actuator augments turn redstone strength into rolling stock door movement. With no door filter, the augment drives external doors on the stock above it; with a comma-separated filter, it only drives matching door control groups. Use the augment filter screen to set include and exclude stock tags, then feed redstone from 0 to 15 to choose the door position.",
+      "body_fr": "Les modules d'actionneur convertissent la puissance redstone en mouvement de portes du materiel roulant. Sans filtre de porte, le module commande les portes externes du vehicule au-dessus; avec un filtre separe par des virgules, il commande seulement les groupes de controle correspondants. Utilisez l'ecran de filtre du module pour regler les tags inclus ou exclus, puis envoyez une redstone de 0 a 15 pour choisir la position."
+    },
+    "boiler_machine": {
+      "body_en": "The boiler machine rolls boiler plate into boiler-segment components for steam locomotives. Insert a boiler plate, keep the power input supplied with enough energy for the configured machine power factor, wait for the craft progress to finish, then collect the output from the machine. The output keeps the source stock definition and gauge from the input plate.",
+      "body_fr": "La machine a chaudieres roule les plaques de chaudiere en segments de chaudiere pour les locomotives a vapeur. Inserez une plaque de chaudiere, alimentez l'entree d'energie selon le facteur de puissance configure, attendez la fin de la progression, puis recuperez la sortie. La sortie conserve la definition de materiel et l'ecartement de la plaque d'origine."
+    },
+    "cast_rail": {
+      "body_en": "Cast rail is the intermediate rail blank used by the rail roller. It carries gauge data, so cast rails made for one gauge should be rolled into rail for that same gauge. Feed cast rail into the rail machine to receive stacks of placeable rail items.",
+      "body_fr": "Le rail coule est l'ebauche intermediaire utilisee par la lamineuse a rails. Il transporte les donnees d'ecartement, donc les rails coules pour un ecartement doivent etre lamines pour ce meme ecartement. Inserez-les dans la machine a rails pour obtenir des piles de rails placables."
+    },
+    "casting": {
+      "body_en": "The casting multiblock stores molten steel, damages entities standing in the hot work area, and produces raw cast parts or cast rails from selected targets. Drop valid casting inputs into the melt area, choose a target in the casting screen, supply power, and keep the output clear so the machine can pour. Single mode stops after one output; repeat mode keeps trying while steel and space remain.",
+      "body_fr": "Le multibloc de fonderie stocke l'acier fondu, blesse les entites dans la zone chaude et produit des pieces brutes ou des rails coules depuis la cible choisie. Jetez des entrees valides dans la zone de fusion, choisissez une cible dans l'ecran de fonderie, fournissez de l'energie et gardez la sortie libre. Le mode simple s'arrete apres une sortie; le mode repete continue tant qu'il reste de l'acier et de la place."
+    },
+    "commands": {
+      "body_en": "Immersive Railroading registers a level-4 command under the mod id. The cargoFill subcommand fills nearby freight inventories with the stack held in the main hand and accepts an optional non-negative distance, defaulting to 2. The debug subcommand lists loaded rolling stock UUIDs, entity ids, definition ids, and positions, which is useful for pack or save diagnostics.",
+      "body_fr": "Immersive Railroading enregistre une commande de niveau 4 sous l'identifiant du mod. La sous-commande cargoFill remplit les inventaires de fret proches avec la pile tenue en main principale et accepte une distance positive ou nulle, par defaut 2. La sous-commande debug liste les UUID, ids d'entite, ids de definition et positions du materiel charge, utile pour diagnostiquer un pack ou une sauvegarde."
+    },
+    "conductor_whistle": {
+      "body_en": "The conductor whistle controls villagers near passenger stock. When used with conductor permission, it plays the whistle sound and looks for the closest coupled train in range. A normal use boards nearby villagers into available passenger seats; a crouching use removes villager passengers from cars in range. The range and payout behavior are controlled by the balance configuration.",
+      "body_fr": "Le sifflet de conducteur gere les villageois pres du materiel voyageurs. Avec la permission de conducteur, il joue le son du sifflet et cherche le train couple le plus proche. Une utilisation normale fait monter les villageois dans les sieges disponibles; une utilisation accroupie fait descendre les villageois des voitures proches. La portee et les paiements sont regles par la configuration d'equilibrage."
+    },
+    "configuration": {
+      "body_en": "The port writes separate configuration files for general balance and damage rules, graphics and overlay units, sound categories, and permission defaults. The balance file controls fuel requirements, track material multipliers, radio range and cost, machine power use, turntable and transfer table speed, and stock tank rounding. Graphics controls units, overlays, stock variants, LOD, lighting, and track render distance. Sound controls the global IR volume tree and optional extra audio channels.",
+      "body_fr": "Le port ecrit des fichiers de configuration separes pour les regles generales, l'equilibrage, les degats, les graphismes, les sons et les permissions par defaut. Le fichier balance controle le carburant, les multiplicateurs de materiaux de voie, la radio, la puissance des machines, la vitesse des tables et l'arrondi des reservoirs. Les graphismes reglent les unites, overlays, variantes, LOD, eclairage et distance de rendu. Les sons reglent le volume IR et les canaux audio."
+    },
+    "coupler_augment": {
+      "body_en": "The coupler augment automates coupler state for rolling stock above the rail. In the filter screen, choose engaged or disengaged mode, configure stock tag filters, and decide whether redstone is always enabled, required, inverted, or disabled. When active, the augment applies the chosen state to both couplers on matching stock.",
+      "body_fr": "Le module d'attelage automatise l'etat des attelages du materiel au-dessus de la voie. Dans l'ecran de filtre, choisissez le mode attache ou detache, configurez les tags de stock et choisissez le comportement redstone. Quand il est actif, le module applique l'etat choisi aux deux attelages du vehicule correspondant."
+    },
+    "coupling_hook": {
+      "body_en": "The coupling hook is the handheld tool for changing coupler state on rolling stock. Use it on the visible coupler controls of a car or locomotive to engage, disengage, or inspect coupling state, depending on the stock part that was clicked. Server permissions can require the coupling hook action before a player may change couplers.",
+      "body_fr": "Le crochet d'attelage est l'outil tenu en main pour changer l'etat des attelages. Utilisez-le sur les controles visibles d'une voiture ou locomotive pour attacher, detacher ou verifier l'etat, selon la piece cliquee. Les permissions serveur peuvent exiger cette action avant qu'un joueur puisse modifier les attelages."
+    },
+    "credits_support": {
+      "title_en": "Credits, Legal, and Support",
+      "title_fr": "Credits, licence et support",
+      "body_en": "This port preserves the original Immersive Railroading attribution and license files alongside its NeoForge changes. For authorship, read AUTHORS, NOTICE.md, MODIFICATIONS.md, THIRD_PARTY_LICENSES.md, MODEL_LICENSE, and LICENSE in the mod project. For support, keep crash reports, resource-pack names, the mod version, and the installed jar hash together so issues can be reproduced.",
+      "body_fr": "Ce port conserve l'attribution et les fichiers de licence d'Immersive Railroading avec les changements NeoForge. Pour l'auteur, lisez AUTHORS, NOTICE.md, MODIFICATIONS.md, THIRD_PARTY_LICENSES.md, MODEL_LICENSE et LICENSE dans le projet. Pour le support, gardez ensemble le rapport de crash, les packs de ressources, la version du mod et le hash du jar installe afin de reproduire le probleme."
+    },
+    "custom_track": {
+      "body_en": "Custom track uses the blueprint settings stored on the item and the custom geometry builder. Choose custom when the standard straight, slope, turn, switch, turntable, or transfer table shapes are not enough. The curvosity, smoothing, direction, position mode, gauge, track style, rail bed, and fill settings are saved to the blueprint and consumed when the rail is built.",
+      "body_fr": "La voie personnalisee utilise les reglages stockes sur le plan et le constructeur de geometrie personnalisee. Choisissez ce mode quand les voies droites, pentes, courbes, aiguillages, plaques tournantes ou tables de transfert ne suffisent pas. La courbure, le lissage, la direction, la position, l'ecartement, le style, le lit et le remplissage sont sauvegardes sur le plan et consommes lors de la construction."
+    },
+    "detector": {
+      "body_en": "The detector augment outputs redstone from rail when matching rolling stock is nearby. Modes can output simple presence, speed scaled by 10 km/h steps, passenger count up to 15, cargo fill percent, or liquid fill percent. Use stock filters to limit which vehicles are counted.",
+      "body_fr": "Le module detecteur produit un signal redstone depuis la voie lorsqu'un materiel correspondant est proche. Les modes peuvent signaler la presence, la vitesse par tranches de 10 km/h, le nombre de passagers jusqu'a 15, le pourcentage de cargaison ou le pourcentage de liquide. Utilisez les filtres de stock pour limiter les vehicules comptes."
+    },
+    "diesel_locomotives": {
+      "body_en": "Diesel locomotives use liquid fuel, an engine on/off state, throttle notches, reverser notches, engine temperature, and optional overheating. Use the start-stop key to toggle the engine, fill the tank with a configured diesel fuel, then raise throttle and set reverser direction. The diesel definition controls throttle notch count, tank capacity, traction behavior, and whether radio equipment is available.",
+      "body_fr": "Les locomotives diesel utilisent du carburant liquide, un etat moteur marche-arret, des crans de traction, des crans d'inverseur, une temperature moteur et une surchauffe optionnelle. Utilisez la touche demarrer-arreter, remplissez le reservoir avec un carburant diesel configure, puis augmentez la traction et reglez l'inverseur. La definition diesel controle les crans, la capacite, la traction et l'equipement radio."
+    },
+    "fluid_loader": {
+      "body_en": "The fluid loader augment moves fluid from adjacent tanks into a matching tank car when its redstone mode allows operation. It checks every side except neighboring IR rail, transfers in 100 mB steps, and can also expose the nearby car tank to external automation through the rail block tank capability.",
+      "body_fr": "Le module chargeur de fluide deplace le fluide des reservoirs adjacents vers un wagon-citerne correspondant quand le mode redstone autorise l'operation. Il verifie chaque cote sauf les voies IR voisines, transfere par pas de 100 mB et peut exposer le reservoir du wagon a l'automatisation externe via la capacite de reservoir de la voie."
+    },
+    "fluid_unloader": {
+      "body_en": "The fluid unloader augment moves fluid from a matching tank car into adjacent tanks when active. It uses the same tag filtering, redstone mode, and push-pull toggle as the item logistics augments. Keep rail augments from touching each other directly; the code skips adjacent IR rails during transfer scans.",
+      "body_fr": "Le module dechargeur de fluide deplace le fluide d'un wagon-citerne correspondant vers les reservoirs adjacents lorsqu'il est actif. Il utilise les memes filtres de tags, modes redstone et option pousser-tirer que les modules d'objets. Evitez les modules de voie directement adjacents entre eux, car le code ignore les voies IR voisines durant les transferts."
+    },
+    "freight_cars": {
+      "body_en": "Freight cars provide inventories after they are assembled. Their weight increases with carried items using the configured block weight. If dropped-item loading is enabled, freight can collect nearby item entities into open cargo slots. Livestock-capable freight can board leashed living entities and release them back to a lead when interacted with.",
+      "body_fr": "Les wagons de fret fournissent des inventaires apres assemblage. Leur masse augmente avec les objets transportes selon le poids de bloc configure. Si le chargement d'objets au sol est active, le fret peut recuperer les entites d'objets proches dans les emplacements libres. Les wagons compatibles betail peuvent embarquer des entites tenues en laisse et les rendre a la laisse."
+    },
+    "gauges_and_scale": {
+      "title_en": "Gauges and Scale",
+      "title_fr": "Ecartements et echelle",
+      "body_en": "Gauges are registered from the gauge resource data and are sorted from largest to smallest. A gauge controls rail rendering, stock scale, seating behavior, sound pitch, material cost, fluid capacity, and whether model-scale stock may bypass fuel requirements when the config allows it. Build track and stock in matching gauges unless the server explicitly permits design gauge mismatches.",
+      "body_fr": "Les ecartements sont enregistres depuis les ressources de gauges et tries du plus grand au plus petit. L'ecartement controle le rendu de voie, l'echelle du materiel, la posture des passagers, la hauteur sonore, le cout des materiaux, la capacite de fluide et certains cas de carburant pour les modeles reduits. Construisez voies et materiel avec des ecartements compatibles sauf si le serveur autorise les ecarts."
+    },
+    "getting_started": {
+      "title_en": "Getting Started",
+      "title_fr": "Premiers pas",
+      "body_en": "Start with the Immersive Railroading manual item, which opens this category inside the Immersive Engineering Engineer's Manual. Make a track blueprint, open its rail screen, choose gauge, track type, length, track style, rail bed, and preview mode, then place a preview or build the real rail. Use the large wrench for machines and rail maintenance, then add rolling stock once the rail path is ready.",
+      "body_fr": "Commencez avec l'objet manuel d'Immersive Railroading, qui ouvre cette categorie dans le manuel d'Immersive Engineering. Fabriquez un plan de voie, ouvrez son ecran, choisissez l'ecartement, le type, la longueur, le style, le lit et le mode apercu, puis placez une previsualisation ou construisez la voie reelle. Utilisez la grande cle pour les machines et la maintenance, puis ajoutez le materiel roulant."
+    },
+    "golden_spike": {
+      "body_en": "The golden spike is used with rail preview and construction workflows. Holding it near rail previews helps the renderer show placement context, and it is part of the player tool set for confirming large rail work before spending materials. Use previews first when the route is long, curved, sloped, or close to existing machines.",
+      "body_fr": "Le crampon d'or est utilise avec les apercus et la construction de voie. Le tenir pres d'un apercu aide le rendu a montrer le contexte de placement et il fait partie des outils de validation avant de consommer des materiaux. Utilisez d'abord les apercus quand le trajet est long, courbe, en pente ou proche de machines existantes."
+    },
+    "hand_car": {
+      "body_en": "The hand car is a single rolling stock definition for compact manual rail travel. It follows normal stock placement, gauge, assembly, coupling, riding, and paint behavior. Use it to test routes and gauges before committing locomotives or long consists.",
+      "body_fr": "La draisine est une definition unique de materiel roulant pour les deplacements simples sur rail. Elle suit les regles normales de placement, ecartement, assemblage, attelage, conduite et peinture. Utilisez-la pour tester les routes et ecartements avant d'engager des locomotives ou de longs convois."
+    },
+    "item_loader": {
+      "body_en": "The item loader augment moves items from adjacent inventories into the inventory of matching freight stock when active. The augment can also expose the freight inventory through the rail block inventory capability for automation from nearby blocks. Use filters to target specific stock and redstone modes to prevent accidental loading.",
+      "body_fr": "Le module chargeur d'objets deplace les objets des inventaires adjacents vers l'inventaire du wagon de fret correspondant lorsqu'il est actif. Il peut aussi exposer cet inventaire via la capacite d'inventaire du bloc de voie pour l'automatisation. Utilisez les filtres pour viser certains wagons et les modes redstone pour eviter les chargements accidentels."
+    },
+    "item_manual": {
+      "body_en": "The manual item is both the entry point to the IE Engineer's Manual and the multiblock blueprint selector. Use it normally to open the manual through the compatibility bridge; crouch-use to cycle the selected registered multiblock; use it on a block to place the selected multiblock blueprint in the world if you have the materials or are in creative.",
+      "body_fr": "L'objet manuel sert a la fois d'entree vers le manuel IE et de selecteur de plans multiblocs. Utilisez-le normalement pour ouvrir le manuel via la passerelle de compatibilite; utilisez-le accroupi pour changer le multibloc selectionne; utilisez-le sur un bloc pour placer le plan du multibloc choisi si vous avez les materiaux ou etes en creatif."
+    },
+    "item_unloader": {
+      "body_en": "The item unloader augment moves items from matching freight stock into adjacent inventories when active. It uses the same stock filters, redstone modes, and push-pull option as the item loader. Place inventories beside the augmented rail, keep the freight car over the augment, and ensure permissions allow augment changes before configuring it.",
+      "body_fr": "Le module dechargeur d'objets deplace les objets du wagon de fret correspondant vers les inventaires adjacents lorsqu'il est actif. Il utilise les memes filtres, modes redstone et option pousser-tirer que le chargeur. Placez des inventaires a cote de la voie augmentee, gardez le wagon au-dessus et verifiez les permissions avant de le configurer."
+    },
+    "key_bindings": {
+      "body_en": "Client key bindings send server packets for locomotive control. Numpad 8, 5, and 2 raise, zero, and lower throttle; numpad 9, 6, and 3 control the reverser; numpad 7, 4, and 1 control train and independent brakes; numpad Enter sounds horn or whistle; Multiply toggles the dead man's switch; Add toggles diesel start-stop; Subtract rings the bell; Divide opens the stock configuration screen.",
+      "body_fr": "Les raccourcis client envoient des paquets serveur pour la conduite. Numpad 8, 5 et 2 montent, remettent a zero et baissent la traction; 9, 6 et 3 controlent l'inverseur; 7, 4 et 1 controlent les freins du train et independants; Entree du pavé numerique sonne le klaxon ou sifflet; Multiplier bascule la veille automatique; Plus demarre ou arrete le diesel; Moins sonne la cloche; Diviser ouvre la configuration."
+    },
+    "large_wrench": {
+      "body_en": "The large wrench removes installed rail augments, returning the correct augment item when allowed, adjusts turntables and transfer tables, and attempts to form registered multiblocks from matching block structures. It is also used on partially assembled rolling stock to add the next required component, or while crouching to remove the last component.",
+      "body_fr": "La grande cle retire les modules de voie installes, rend l'objet correspondant quand c'est autorise, ajuste les plaques tournantes et tables de transfert, et tente de former les multiblocs enregistres depuis les structures valides. Elle sert aussi sur le materiel roulant incomplet pour ajouter la prochaine piece requise, ou accroupi pour retirer la derniere piece."
+    },
+    "multiblocks": {
+      "body_en": "IR registers five workshop multiblocks: steam hammer, plate machine, rail machine, boiler machine, and casting. The manual item can cycle and place blueprints, while the large wrench can detect and form completed structures. Most machines use a power input and craft progress that counts down from 100 before producing output.",
+      "body_fr": "IR enregistre cinq multiblocs d'atelier : marteau vapeur, machine a plaques, machine a rails, machine a chaudieres et fonderie. Le manuel peut changer et placer les plans, tandis que la grande cle peut detecter et former les structures terminees. La plupart utilisent une entree d'energie et une progression qui descend de 100 avant de produire la sortie."
+    },
+    "paint_brush": {
+      "body_en": "The paint brush changes rolling stock texture variants. Crouch-use cycles brush mode. GUI mode opens a picker on client interaction, random single changes one stock item, and random coupled changes each coupled car independently. Server permission controls whether paint changes are accepted, and debug chat can announce the selected livery.",
+      "body_fr": "Le pinceau change les variantes de texture du materiel roulant. Utilisez-le accroupi pour changer de mode. Le mode GUI ouvre un selecteur, le mode aleatoire simple change un vehicule, et le mode aleatoire couple change chaque vehicule du train. La permission serveur controle l'acceptation et le debug peut annoncer la livree choisie."
+    },
+    "passenger_cars": {
+      "body_en": "Passenger cars accept players and villagers up to their definition's passenger limit. Players can move between coupled cars through open connecting doors and can dismount through external doors. Villagers boarded by the conductor whistle track their start position and can pay configured items based on distance traveled.",
+      "body_fr": "Les voitures voyageurs acceptent joueurs et villageois jusqu'a la limite de leur definition. Les joueurs peuvent passer entre voitures couplees par les portes de connexion ouvertes et descendre par les portes externes. Les villageois embarques par le sifflet conservent leur position de depart et peuvent payer des objets configures selon la distance parcourue."
+    },
+    "plate_machine": {
+      "body_en": "The plate machine consumes steel blocks and produces selected plate items. Put a steel block at the input, choose a craft item in the plate roller screen, supply energy at the power block, and collect output from the far end. Plate type and stock context determine which later rolling stock components can be made.",
+      "body_fr": "La machine a plaques consomme des blocs d'acier et produit les plaques choisies. Placez un bloc d'acier a l'entree, choisissez l'objet dans l'ecran, fournissez l'energie au bloc d'alimentation et recuperez la sortie a l'autre bout. Le type de plaque et le contexte du materiel determinent les composants fabriques ensuite."
+    },
+    "plates": {
+      "body_en": "Plate items represent shaped steel for rolling stock construction. Large, medium, small, and boiler plates are selected by machine output and component requirements. Plate costs are calculated from component size, gauge scale, and the component's plate type, so larger gauges and larger shells require more material.",
+      "body_fr": "Les plaques representent l'acier forme pour construire le materiel roulant. Les grandes, moyennes, petites et plaques de chaudiere sont choisies par la sortie machine et les exigences des pieces. Les couts de plaques viennent de la taille de la piece, de l'echelle de l'ecartement et du type de plaque, donc les grands ecartements et grandes caisses coutent plus cher."
+    },
+    "radio_control": {
+      "body_en": "Radio control cards link to locomotives for remote control support. Use a card on a locomotive with locomotive-control permission to link or relink it; crouch-use on a linked locomotive clears the link. The config can require radio-capable locomotive equipment, and radio range and transmission cost are balance settings.",
+      "body_fr": "Les cartes de radio-commande se lient aux locomotives pour le controle distant. Utilisez une carte sur une locomotive avec la permission de conduite pour la lier ou relier; utilisez-la accroupi pour effacer le lien. La configuration peut exiger un equipement radio sur la locomotive, et la portee ainsi que le cout de transmission sont des reglages d'equilibrage."
+    },
+    "rail_augments": {
+      "body_en": "Rail augments add automation behavior to placed rails. Available variants include speed retarder, locomotive control, item loader, item unloader, fluid loader, fluid unloader, detector, coupler, and actuator; water trough is present in code but hidden from creative variants and rejected on placement. Augments store gauge and type data, require matching gauge unless creative, and can be removed with the large wrench.",
+      "body_fr": "Les modules de voie ajoutent de l'automatisation aux rails poses. Les variantes incluent ralentisseur, controle locomotive, chargeur et dechargeur d'objets, chargeur et dechargeur de fluide, detecteur, attelage et actionneur; l'abreuvoir existe dans le code mais n'apparait pas en creatif et est refuse au placement. Les modules stockent ecartement et type, exigent le meme ecartement sauf en creatif, et se retirent avec la grande cle."
+    },
+    "rail_gag": {
+      "body_en": "Rail gag blocks are helper blocks used by multi-block track shapes and replaced rail sections. They keep child rail positions connected to their parent rail and are cleaned up when the parent is missing or invalid. Players usually interact with the parent rail or blueprint rather than the gag block directly.",
+      "body_fr": "Les blocs rail gag sont des blocs auxiliaires utilises par les formes de voie multi-blocs et les sections remplacees. Ils relient les positions enfants au rail parent et sont nettoyes lorsque le parent manque ou devient invalide. Les joueurs interagissent normalement avec le rail parent ou le plan plutot qu'avec le bloc auxiliaire."
+    },
+    "rail_item": {
+      "body_en": "Rail items are material pieces produced by the rail machine and consumed by survival track construction. They carry gauge data, and the material checker only accepts rail items whose gauge matches the blueprint gauge. Track definitions may also request ties, rail bed, or custom material entries.",
+      "body_fr": "Les objets rail sont des pieces de materiau produites par la machine a rails et consommees par la construction en survie. Ils transportent l'ecartement, et le controle de materiaux accepte seulement les rails dont l'ecartement correspond au plan. Les definitions de voie peuvent aussi demander traverses, lit de voie ou materiaux personnalises."
+    },
+    "rail_machine": {
+      "body_en": "The rail machine rolls one cast rail into 20 rail items of the same gauge. Insert cast rail at the input, provide energy, wait for the craft progress to finish, then collect the output. The machine skips work while its output slot is full.",
+      "body_fr": "La machine a rails transforme un rail coule en 20 objets rail du meme ecartement. Inserez un rail coule a l'entree, fournissez de l'energie, attendez la fin de la progression, puis recuperez la sortie. La machine attend si son emplacement de sortie est plein."
+    },
+    "rail_preview": {
+      "body_en": "Preview rails let you inspect placement before spending materials. Enable preview mode on the track blueprint, place the preview, then reopen or update the blueprint settings to adjust length, gauge, rail style, smoothing, and table options. When the shape is correct, disable preview and build the real rail.",
+      "body_fr": "Les apercus de voie permettent de verifier le placement avant de depenser des materiaux. Activez le mode apercu sur le plan, placez l'apercu, puis rouvrez ou mettez a jour les reglages pour ajuster longueur, ecartement, style, lissage et options de table. Quand la forme est correcte, desactivez l'apercu et construisez la voie reelle."
+    },
+    "rails": {
+      "body_en": "Placed rails store their parent settings, gauge, track type, rendered bed state, augments, redstone output, snow state, and replacement data. Survival placement checks materials before building; creative placement may clear space when configured. Rails can break if too much of the track is unsupported and the solid-block rule is enabled.",
+      "body_fr": "Les rails poses stockent leurs reglages parents, ecartement, type, etat du lit rendu, modules, sortie redstone, neige et donnees de remplacement. Le placement en survie verifie les materiaux avant construction; le placement creatif peut degager l'espace si configure. Les rails peuvent se casser si trop de voie est sans support et que la regle de blocs solides est activee."
+    },
+    "resource_packs": {
+      "title_en": "Resource Packs and Custom Rolling Stock",
+      "title_fr": "Packs de ressources et materiel roulant personnalise",
+      "body_en": "Rolling stock and track definitions load from JSON or CAML resource data. stock.json chooses locomotive, tender, passenger, freight, tank, and hand-car definitions, with blacklist support; track.json chooses track definitions. Missing or broken resources can remove stock from the world, so keep custom packs installed on both server and client and check logs for DefinitionManager load errors.",
+      "body_fr": "Les definitions de materiel et de voie se chargent depuis des ressources JSON ou CAML. stock.json choisit les locomotives, tenders, voitures, fret, citernes et draisines, avec support de blacklist; track.json choisit les voies. Des ressources absentes ou cassees peuvent retirer du materiel du monde, donc gardez les packs personnalises installes cote serveur et client et consultez les erreurs de DefinitionManager."
+    },
+    "rolling_stock": {
+      "body_en": "Rolling stock items store a stock definition id, gauge, and optional texture variant. Placement requires stock-assembly permission and spawns the selected definition on rail. Definitions provide weight, passengers, model controls, sounds, animations, coupler offsets, and component requirements. Name tags can set stock tags used by automation filters.",
+      "body_fr": "Les objets de materiel roulant stockent un id de definition, un ecartement et une variante de texture optionnelle. Le placement exige la permission d'assemblage et cree la definition choisie sur la voie. Les definitions fournissent masse, passagers, controles de modele, sons, animations, positions d'attelage et pieces requises. Les etiquettes de nom peuvent definir les tags utilises par les filtres d'automatisation."
+    },
+    "rolling_stock_components": {
+      "body_en": "Rolling stock components are the build steps for partially assembled stock. Frames can be placed as the starting stock, cast components may require the steam hammer before use, and shell or boiler parts may require plates. Use the large wrench on unbuilt stock to add the next required part, or crouch-use it to remove the last part and recover a component.",
+      "body_fr": "Les composants de materiel roulant sont les etapes de construction du stock incomplet. Les chassis peuvent etre places comme depart, les pieces coulees peuvent exiger le marteau vapeur, et les caisses ou chaudieres peuvent exiger des plaques. Utilisez la grande cle sur un materiel incomplet pour ajouter la prochaine piece, ou accroupi pour retirer la derniere et recuperer un composant."
+    },
+    "steam_hammer": {
+      "body_en": "The steam hammer finishes raw cast components that require hammering. Put a raw cast component in the input slot, keep the power input supplied, wait for progress to reach completion, then take the finished component from the output. Only raw cast rolling stock components are valid input.",
+      "body_fr": "Le marteau vapeur finit les composants bruts qui demandent martelage. Placez un composant brut dans l'entree, fournissez l'energie, attendez la fin de la progression, puis prenez le composant fini dans la sortie. Seuls les composants de materiel roulant marques bruts sont des entrees valides."
+    },
+    "steam_locomotives": {
+      "body_en": "Steam locomotives run from boiler pressure, boiler temperature, water, burnable fuel, throttle, and reverser. Fuel heats water into pressure; pressure and reverser determine tractive effort. Tenders can automatically feed water and matching fuel stacks into attached locomotives. Watch water and pressure carefully because fuel requirements and boiler explosion rules are configurable.",
+      "body_fr": "Les locomotives a vapeur fonctionnent avec pression de chaudiere, temperature, eau, combustible, regulateur et inverseur. Le combustible chauffe l'eau en pression; la pression et l'inverseur determinent l'effort de traction. Les tenders peuvent alimenter automatiquement l'eau et les piles de combustible correspondantes. Surveillez eau et pression, car les exigences de carburant et les explosions sont configurables."
+    },
+    "switch_key": {
+      "body_en": "The switch key locks, cycles, and resets switch state. Use it on an IR switch rail to force the next switch state; use it in air or on another block to reset the last switch stored in the key. The item stores the last switch position, forced state, and a short cooldown to prevent double clicks.",
+      "body_fr": "La cle d'aiguillage verrouille, change et reinitialise l'etat des aiguillages. Utilisez-la sur un rail d'aiguillage IR pour forcer l'etat suivant; utilisez-la dans l'air ou sur un autre bloc pour reinitialiser le dernier aiguillage memorise. L'objet stocke la position, l'etat force et un court delai contre les doubles clics."
+    },
+    "switches": {
+      "body_en": "Switch track uses the same blueprint system as other track but exposes forced switch states for routing. The switch key can cycle forced state, while rail logic and automation can read or update switch parents. Use the blueprint direction, quarters, curvosity, and smoothing controls to make switch geometry match the route before building.",
+      "body_fr": "Les aiguillages utilisent le meme systeme de plan que les autres voies, mais exposent des etats forces pour le routage. La cle d'aiguillage peut changer l'etat force, tandis que la logique de voie et l'automatisation peuvent lire ou modifier les parents. Reglez direction, quarts, courbure et lissage dans le plan avant de construire."
+    },
+    "tank_cars": {
+      "body_en": "Tank cars are freight stock with a fluid tank and two container slots. They filter fluids from their definition, sync amount and fluid type, update weight from fluid density, and support container filling or draining through their inventory. Loader and unloader augments can move fluid between tank cars and adjacent tanks.",
+      "body_fr": "Les wagons-citernes sont du fret avec un reservoir de fluide et deux emplacements de contenants. Ils filtrent les fluides selon leur definition, synchronisent quantite et type, mettent a jour la masse selon la densite, et supportent le remplissage ou vidage par inventaire. Les modules chargeur et dechargeur peuvent transferer le fluide avec des reservoirs adjacents."
+    },
+    "tenders": {
+      "body_en": "Tenders are coupled support stock for steam locomotives. When attached on the configured side, a steam locomotive can draw water from the tender and can top off matching burnable stacks from tender cargo slots. Tender definitions provide tank capacity, cargo behavior, gauge scaling, and coupling behavior like other rolling stock.",
+      "body_fr": "Les tenders sont du materiel de support couple aux locomotives a vapeur. Lorsqu'ils sont attaches du bon cote, la locomotive peut tirer de l'eau du tender et completer les piles de combustible correspondantes depuis ses emplacements. Les definitions de tender fournissent capacite, cargaison, echelle et attelage comme les autres stocks."
+    },
+    "track_blueprint": {
+      "body_en": "The track blueprint stores all rail settings and opens the rail GUI from the primary hand. Secondary-use on a block stores rail bed or fill material, crouch-secondary storing fill instead of bed. Placement builds a real rail or a preview depending on the preview toggle, using yaw and hit position for placement.",
+      "body_fr": "Le plan de voie stocke tous les reglages et ouvre l'interface de voie depuis la main principale. Une utilisation secondaire sur un bloc enregistre le lit ou le remplissage; accroupi enregistre le remplissage. Le placement construit une voie reelle ou un apercu selon l'option, en utilisant le yaw et la position cliquee."
+    },
+    "track_exchanger": {
+      "body_en": "The track exchanger stores target track style, rail bed, and gauge. Open its GUI to choose the replacement rail appearance, then use it on existing rails with exchange-track permission. It builds an internal straight blueprint preview for display and sends the selected settings to the server when closed.",
+      "body_fr": "L'echangeur de voie stocke le style cible, le lit de rail et l'ecartement. Ouvrez son interface pour choisir l'apparence de remplacement, puis utilisez-le sur des rails existants avec la permission d'echange. Il cree un apercu interne de voie droite pour l'affichage et envoie les reglages au serveur a la fermeture."
+    },
+    "track_geometry": {
+      "body_en": "Track geometry includes straight, slope, turn, switch, turntable, transfer table, crossing, and custom shapes. The GUI exposes only supported player choices and hides crossing from the normal selector. Turns and switches use quarter angles, switches and custom track use curvosity, and table lengths are capped by gauge-aware builders.",
+      "body_fr": "La geometrie de voie inclut droite, pente, courbe, aiguillage, plaque tournante, table de transfert, croisement et personnalisee. L'interface expose seulement les choix supportes et cache le croisement du selecteur normal. Courbes et aiguillages utilisent des angles par quarts, aiguillages et personnalisees utilisent la courbure, et les longueurs de tables sont limitees par des constructeurs dependants de l'ecartement."
+    },
+    "track_planning": {
+      "title_en": "Track Planning",
+      "title_fr": "Planification de voie",
+      "body_en": "Plan track before spending rail material. Pick gauge first, then type, length, direction, smoothing, grade crossing, and rail bed. Use preview mode for long curves, switches, turntables, transfer tables, and custom track, then inspect clearances before building. Survival construction consumes tie, rail, bed, and fill materials from the player's inventory according to the chosen track definition and configured multipliers.",
+      "body_fr": "Planifiez la voie avant de depenser les materiaux. Choisissez d'abord l'ecartement, puis type, longueur, direction, lissage, passage a niveau et lit. Utilisez l'apercu pour les longues courbes, aiguillages, plaques tournantes, tables de transfert et voies personnalisees, puis verifiez les degagements avant construction. En survie, la construction consomme traverses, rails, lit et remplissage selon la definition et les multiplicateurs configures."
+    },
+    "track_styles": {
+      "body_en": "Track styles come from track resource definitions such as default, concrete, and railsonly. Each track definition names render models, materials for ties, rails, and bed, clack behavior, bumpiness, cog behavior, and model gauge. The blueprint stores the selected track id and uses the closest render model for the chosen gauge.",
+      "body_fr": "Les styles de voie viennent des definitions de ressources comme default, concrete et railsonly. Chaque definition nomme les modeles de rendu, materiaux de traverses, rails et lit, comportement de cliquetis, irregularite, cremaille et ecartement modele. Le plan stocke l'id choisi et utilise le modele compatible le plus proche pour l'ecartement."
+    },
+    "transfer_tables": {
+      "body_en": "Transfer tables are table track pieces that move laterally between entries. Their GUI exposes entry count and entry spacing, and their length is capped by a gauge-aware builder. The large wrench can click transfer table rails to move or select the table position according to server-side table logic.",
+      "body_fr": "Les tables de transfert sont des voies de table qui se deplacent lateralement entre entrees. Leur interface expose le nombre d'entrees et l'espacement, et leur longueur est limitee par un constructeur dependant de l'ecartement. La grande cle peut cliquer les rails de table pour deplacer ou choisir la position selon la logique serveur."
+    },
+    "troubleshooting": {
+      "title_en": "Troubleshooting",
+      "title_fr": "Depannage",
+      "body_en": "If the manual category is missing, verify the installed jar contains assets/immersiveengineering/manual/autoload.json and fully namespaced immersiverailroading entries. If stock disappears or refuses to load, check that every required resource pack is installed and that DefinitionManager did not log missing stock or track files. If machines do nothing, check power input, output slots, craft target, and machinePowerFactor. If automation does nothing, check permissions, stock filters, redstone mode, and whether the car is actually over the augmented rail.",
+      "body_fr": "Si la categorie du manuel manque, verifiez que le jar installe contient assets/immersiveengineering/manual/autoload.json et des entrees immersiverailroading completement qualifiees. Si du materiel disparait ou refuse de charger, verifiez les packs de ressources et les erreurs DefinitionManager. Si les machines ne font rien, verifiez energie, sorties, cible de craft et machinePowerFactor. Si l'automatisation ne fait rien, verifiez permissions, filtres, mode redstone et position du wagon au-dessus du rail augmente."
+    },
+    "turntables": {
+      "body_en": "Turntables rotate stock between connected tracks. Their maximum length depends on gauge, and server-side speed uses the TurnTableSpeed balance setting. Use the blueprint to pick turntable geometry and the large wrench on the placed table to set its position from the clicked point.",
+      "body_fr": "Les plaques tournantes font pivoter le materiel entre voies connectees. Leur longueur maximale depend de l'ecartement, et la vitesse serveur utilise le reglage TurnTableSpeed. Utilisez le plan pour choisir la geometrie, puis la grande cle sur la table posee pour definir sa position depuis le point clique."
+    },
+    "welcome": {
+      "body_en": "This IE Engineer's Manual category is the first-party player reference for the NeoForge 1.21.1 Immersive Railroading Reforged port. It covers IR-owned track construction, rolling stock, locomotives, passenger and freight operations, rail augments, workshop multiblocks, configuration, commands, resource packs, and troubleshooting. TrackAPI and Universal Mod Core remain runtime dependencies but their technical reference appendices are intentionally outside this category.",
+      "body_fr": "Cette categorie du manuel IE est la reference joueur de premiere partie pour le port NeoForge 1.21.1 Immersive Railroading Reforged. Elle couvre la construction de voie IR, le materiel roulant, locomotives, operations voyageurs et fret, modules de voie, multiblocs d'atelier, configuration, commandes, packs de ressources et depannage. TrackAPI et Universal Mod Core restent des dependances runtime, mais leurs annexes techniques sont volontairement hors de cette categorie."
+    }
+  }
+}

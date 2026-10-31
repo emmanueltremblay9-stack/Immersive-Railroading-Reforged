@@ -1,0 +1,6 @@
+{
+  "pack": "IRR External Template Pack",
+  "freight": [
+    "irr_template:example_flatcar"
+  ]
+}
